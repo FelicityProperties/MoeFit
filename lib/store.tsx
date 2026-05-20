@@ -20,7 +20,7 @@ import {
   ScheduleItem,
   WorkoutStatus,
 } from "./types";
-import { freshState } from "./defaults";
+import { freshState, migrateState } from "./defaults";
 import { toDateKey } from "./date";
 
 const STORAGE_KEY = "moefit:v1";
@@ -48,8 +48,8 @@ function loadState(): AppState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return freshState();
     const parsed = JSON.parse(raw) as AppState;
-    // Merge with fresh defaults so new fields always exist.
-    return { ...freshState(), ...parsed };
+    // Merge with fresh defaults so new fields always exist, then migrate.
+    return migrateState({ ...freshState(), ...parsed });
   } catch {
     return freshState();
   }
@@ -170,7 +170,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           ? new Date(remote.updatedAt).getTime()
           : 0;
         if (remote.data && remoteTs >= localTs) {
-          const merged = { ...freshState(), ...remote.data };
+          const merged = migrateState({ ...freshState(), ...remote.data });
           setState(merged);
           saveState(merged);
         } else {
@@ -366,7 +366,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       const parsed = JSON.parse(json) as AppState;
       if (!parsed || typeof parsed !== "object" || !parsed.profile) return false;
-      setState({ ...freshState(), ...parsed });
+      setState(migrateState({ ...freshState(), ...parsed }));
       return true;
     } catch {
       return false;

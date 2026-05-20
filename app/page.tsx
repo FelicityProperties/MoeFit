@@ -73,6 +73,16 @@ function Dashboard() {
   const plan = planForDate(now);
   const currentHour = now.getHours();
 
+  // Today's training, used to label the "workout" slot in the routine.
+  const trainingBlocks = plan.filter((b) => b.type !== "rest");
+  const workoutLabel =
+    trainingBlocks.length > 0
+      ? trainingBlocks.map((b) => b.title).join(" + ")
+      : "Rest day — recover";
+  // Show the day's actual session in any "workout" routine slot.
+  const labelFor = (item: ScheduleItem) =>
+    item.category === "workout" ? workoutLabel : item.label;
+
   // Determine the active schedule item (latest one whose hour has passed).
   const sorted = [...state.schedule].sort((a, b) => a.hour - b.hour);
   const currentItem =
@@ -128,11 +138,11 @@ function Dashboard() {
           <div className="min-w-0 flex-1">
             <div className="label text-accent">Right now</div>
             <p className="truncate text-lg font-bold text-fg">
-              {currentItem?.label ?? "Plan your day"}
+              {currentItem ? labelFor(currentItem) : "Plan your day"}
             </p>
             {nextItem && (
               <p className="text-xs text-faint">
-                Up next at {formatHour(nextItem.hour)}: {nextItem.label}
+                Up next at {formatHour(nextItem.hour)}: {labelFor(nextItem)}
               </p>
             )}
           </div>
@@ -304,7 +314,7 @@ function Dashboard() {
                     isCurrent ? "font-bold text-fg" : "text-strong"
                   )}
                 >
-                  {item.label}
+                  {labelFor(item)}
                 </span>
                 {isCurrent && (
                   <span className="pill bg-accent/20 text-accent">now</span>
@@ -388,17 +398,25 @@ function MacroRow({
 
 function coachLine(ctx: ReturnType<typeof useCoachContext>): string {
   const hour = ctx.hour;
-  if (hour < 11)
-    return `Start strong: hydrate, eat protein, and lock in your ${ctx.caloriesRemaining} kcal plan for the day.`;
-  if (hour < 17)
+  const isRest = ctx.workoutPlannedToday === "Rest day";
+  // Early morning — training time (your sessions are in the morning).
+  if (hour < 11) {
+    if (isRest)
+      return `Rest day. Hydrate, eat protein, and keep your steps up — recovery is when progress sticks.`;
+    return ctx.workedOutToday
+      ? `Morning training done — refuel with protein and lock in your ${ctx.caloriesRemaining} kcal for the day. 🔥`
+      : `Morning is training time: ${ctx.workoutPlannedToday}. Get it done early, then a high-protein breakfast.`;
+  }
+  if (hour < 17) {
+    if (!ctx.workedOutToday && !isRest)
+      return `You haven't trained yet — squeeze ${ctx.workoutPlannedToday} in, or commit to first thing tomorrow morning. Meanwhile keep lunch lean.`;
     return ctx.caloriesRemaining > 400
       ? `You've got ${ctx.caloriesRemaining} kcal left. Keep lunch lean and don't snack out of boredom.`
       : `Tight on calories (${ctx.caloriesRemaining} left). Lean on protein and water for the rest of the day.`;
+  }
   if (hour < 22)
-    return ctx.workedOutToday
-      ? "Workout done — eat a clean, protein-forward dinner and start winding down."
-      : `Training time: ${ctx.workoutPlannedToday}. Get it done, then a clean dinner.`;
-  return "It's late — no more food, hydrate, screens off, and get to bed. Recovery is part of the plan.";
+    return `Evening: clean, protein-forward dinner and start winding down. No night workouts — your training is in the morning. Prep your gear for tomorrow.`;
+  return "It's late — no more food, hydrate, screens off, and get to bed. Early start = morning training.";
 }
 
 function formatHour(h: number): string {

@@ -48,7 +48,7 @@ export type WorkoutStatus = "pending" | "completed" | "skipped" | "modified";
 export interface WorkoutBlock {
   id: string;
   title: string;
-  type: "gym" | "cardio" | "run" | "hiit" | "rest" | "recovery" | "walk";
+  type: "gym" | "cardio" | "run" | "hiit" | "rest" | "recovery" | "walk" | "muay_thai";
   detail: string;
   estCalories: number;
   durationMin: number;

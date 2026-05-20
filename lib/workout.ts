@@ -1,109 +1,78 @@
 import { WorkoutBlock } from "./types";
 import { mondayIndex } from "./date";
 
-// A 7-day fat-loss focused split. Index 0 = Monday. Each day has 1-2 blocks.
+// Morning-only fat-loss split with Muay Thai on Tuesday & Thursday.
+// Index 0 = Monday. All sessions are done in the MORNING.
 // Block ids are stable per weekday so completion status persists per calendar day.
 
 const WEEK: WorkoutBlock[][] = [
-  // Monday - Full body strength + light cardio
+  // Monday — Gym: full body strength
   [
     {
-      id: "mon-strength",
-      title: "Full Body Strength",
+      id: "mon-gym",
+      title: "Gym — Full Body Strength",
       type: "gym",
-      detail: "Squats 4x10, Bench 4x10, Rows 4x12, Overhead press 3x12, Plank 3x45s",
-      estCalories: 320,
-      durationMin: 50,
+      detail: "Squats 4x10, Bench 4x10, Rows 4x12, Overhead press 3x12, Plank 3x45s. Finish with a 10 min incline walk.",
+      estCalories: 380,
+      durationMin: 60,
     },
+  ],
+  // Tuesday — Muay Thai
+  [
     {
-      id: "mon-cardio",
-      title: "Incline Walk",
+      id: "tue-muaythai",
+      title: "Muay Thai",
+      type: "muay_thai",
+      detail: "Morning class: shadow boxing, pad work, bag rounds, clinch & conditioning. Hydrate well after.",
+      estCalories: 600,
+      durationMin: 75,
+    },
+  ],
+  // Wednesday — Cardio + core
+  [
+    {
+      id: "wed-cardio",
+      title: "Cardio + Core",
       type: "cardio",
-      detail: "15 min incline treadmill walk to finish",
-      estCalories: 110,
-      durationMin: 15,
-    },
-  ],
-  // Tuesday - Cardio + core
-  [
-    {
-      id: "tue-run",
-      title: "Steady Run",
-      type: "run",
-      detail: "25-30 min easy-pace run (zone 2)",
-      estCalories: 300,
-      durationMin: 30,
-    },
-    {
-      id: "tue-core",
-      title: "Core Circuit",
-      type: "hiit",
-      detail: "3 rounds: 20 crunches, 30s plank, 15 leg raises, 20 mountain climbers",
-      estCalories: 120,
-      durationMin: 15,
-    },
-  ],
-  // Wednesday - Upper body + burpees
-  [
-    {
-      id: "wed-upper",
-      title: "Upper Body Push/Pull",
-      type: "gym",
-      detail: "Incline press 4x10, Lat pulldown 4x12, Dips 3x12, Curls 3x12, Lateral raise 3x15",
-      estCalories: 300,
-      durationMin: 45,
-    },
-    {
-      id: "wed-burpees",
-      title: "Burpee Finisher",
-      type: "hiit",
-      detail: "5 rounds: 10 burpees, 30s rest",
-      estCalories: 90,
-      durationMin: 10,
-    },
-  ],
-  // Thursday - Active recovery
-  [
-    {
-      id: "thu-recovery",
-      title: "Active Recovery",
-      type: "recovery",
-      detail: "30-40 min brisk walk + 10 min full-body stretch / mobility",
-      estCalories: 150,
-      durationMin: 45,
-    },
-  ],
-  // Friday - Lower body + HIIT
-  [
-    {
-      id: "fri-legs",
-      title: "Lower Body Strength",
-      type: "gym",
-      detail: "Deadlift 4x8, Lunges 3x12/leg, Leg press 4x12, Calf raises 4x15, Hanging knee raise 3x12",
-      estCalories: 340,
-      durationMin: 50,
-    },
-    {
-      id: "fri-hiit",
-      title: "HIIT Intervals",
-      type: "hiit",
-      detail: "10 rounds: 30s sprint / 60s walk (bike, rower, or run)",
-      estCalories: 180,
-      durationMin: 20,
-    },
-  ],
-  // Saturday - Long cardio / outdoor
-  [
-    {
-      id: "sat-cardio",
-      title: "Long Cardio / Sport",
-      type: "cardio",
-      detail: "45-60 min: long run, cycle, swim, or a sport you enjoy",
+      detail: "25-30 min steady run or intervals, then 3 rounds: 20 crunches, 45s plank, 15 leg raises, 20 mountain climbers.",
       estCalories: 400,
+      durationMin: 45,
+    },
+  ],
+  // Thursday — Muay Thai
+  [
+    {
+      id: "thu-muaythai",
+      title: "Muay Thai",
+      type: "muay_thai",
+      detail: "Morning class: technique, pad work, bag rounds, sparring/clinch. Stretch hips and shoulders after.",
+      estCalories: 600,
+      durationMin: 75,
+    },
+  ],
+  // Friday — Gym: lower body strength
+  [
+    {
+      id: "fri-gym",
+      title: "Gym — Lower Body Strength",
+      type: "gym",
+      detail: "Deadlift 4x8, Lunges 3x12/leg, Leg press 4x12, Calf raises 4x15, Hanging knee raise 3x12.",
+      estCalories: 360,
       durationMin: 55,
     },
   ],
-  // Sunday - Rest
+  // Saturday — Active recovery / light cardio
+  [
+    {
+      id: "sat-recovery",
+      title: "Active Recovery / Light Cardio",
+      type: "recovery",
+      detail: "30-45 min brisk walk, easy bike, or swim + 10 min full-body mobility. Keep it easy.",
+      estCalories: 200,
+      durationMin: 45,
+    },
+  ],
+  // Sunday — Rest
   [
     {
       id: "sun-rest",
@@ -150,6 +119,7 @@ export const WORKOUT_TYPE_META: Record<
   { label: string; color: string }
 > = {
   gym: { label: "Gym", color: "#7c6cff" },
+  muay_thai: { label: "Muay Thai", color: "#f97316" },
   cardio: { label: "Cardio", color: "#38bdf8" },
   run: { label: "Run", color: "#a78bfa" },
   hiit: { label: "HIIT", color: "#f43f5e" },

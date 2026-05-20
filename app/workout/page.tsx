@@ -48,6 +48,9 @@ function TodayWorkout() {
 
   const planned = plan.filter((b) => b.type !== "rest");
   const anySkipped = planned.some((b) => day.workouts[b.id] === "skipped");
+  const trained = planned.some(
+    (b) => day.workouts[b.id] === "completed" || day.workouts[b.id] === "modified"
+  );
   const allHandled =
     planned.length > 0 &&
     planned.every((b) => {
@@ -58,13 +61,13 @@ function TodayWorkout() {
   const recommendation =
     plan[0]?.type === "rest"
       ? "Today is a rest day. Recovery and sleep are when your body actually changes. Light stretching is optional."
+      : trained
+      ? "Session done for the day. Refuel with protein, hydrate, and stay light tonight — no second workout needed."
       : hour < 11
-      ? "Morning training works great on an empty-ish stomach. Hydrate first, then go."
-      : hour < 17
-      ? "Afternoon slot is ideal — your strength peaks. Slot this in after work or on a break."
-      : hour < 21
-      ? "Evening is fine — just leave 2-3 hours before bed so it doesn't wreck your sleep."
-      : "It's late. If you haven't trained, do a short version or push to tomorrow morning — don't sacrifice sleep.";
+      ? "This is your training window — mornings are your slot. Hydrate, then go. You'll feel it all day."
+      : hour < 16
+      ? "You train in the mornings. If today got away from you, get a shorter version in now — otherwise lock it in for first thing tomorrow."
+      : "It's late to start a hard session. Keep it light tonight, protect your sleep, and hit it first thing tomorrow morning.";
 
   return (
     <Card title="Today's Training" icon={<Dumbbell size={16} className="text-accent" />}>

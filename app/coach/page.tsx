@@ -35,6 +35,7 @@ function Chat() {
   const ctx = useCoachContext();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState<string | null>(null);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = state.chat;
@@ -49,7 +50,7 @@ function Chat() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.length, loading]);
+  }, [messages.length, loading, streaming]);
 
   const send = async (text?: string) => {
     const content = (text ?? input).trim();
@@ -60,6 +61,7 @@ function Chat() {
     addChat({ role: "user", content });
     setInput("");
     setLoading(true);
+    setStreaming("");
 
     try {
       const res = await fetch("/api/coach", {
@@ -67,12 +69,26 @@ function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content, context: ctx, history }),
       });
-      const json = await res.json();
-      addChat({ role: "coach", content: json.reply || askCoach(content, ctx) });
+      if (!res.body) throw new Error("no stream");
+
+      // Read the streamed reply chunk-by-chunk so it types out live.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        setStreaming(acc);
+      }
+      acc += decoder.decode();
+      // Commit the finished reply once (avoids spamming storage during stream).
+      addChat({ role: "coach", content: acc.trim() || askCoach(content, ctx) });
     } catch {
       // Network failure — fall back to the built-in coach so the chat still works.
       addChat({ role: "coach", content: askCoach(content, ctx) });
     } finally {
+      setStreaming(null);
       setLoading(false);
     }
   };
@@ -136,7 +152,18 @@ function Chat() {
           </div>
         ))}
 
-        {loading && (
+        {/* Live streaming reply */}
+        {streaming && streaming.length > 0 && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] whitespace-pre-line rounded-2xl rounded-bl-sm border border-line bg-panel px-4 py-2.5 text-sm leading-relaxed text-strong">
+              {streaming}
+              <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-accent align-middle" />
+            </div>
+          </div>
+        )}
+
+        {/* Thinking indicator before the first token arrives */}
+        {loading && (streaming === null || streaming.length === 0) && (
           <div className="flex justify-start">
             <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm border border-line bg-panel px-4 py-3 text-sm text-muted">
               <Loader2 size={14} className="animate-spin" />

@@ -59,6 +59,14 @@ export async function GET() {
   });
 }
 
+const TEXT_HEADERS = {
+  "Content-Type": "text/plain; charset=utf-8",
+  "Cache-Control": "no-store",
+};
+
+// Streams the coach reply as plain-text chunks so the UI can render it
+// word-by-word. Falls back to the built-in coach (as a single chunk) when no key
+// is configured or the API call fails.
 export async function POST(req: Request) {
   let body: CoachRequest;
   try {
@@ -72,61 +80,63 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing message or context." }, { status: 400 });
   }
 
-  // No key configured -> use the built-in offline coach so the app still works.
+  const fallback = () => askCoach(message, context);
+
   if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ reply: askCoach(message, context), source: "local" });
+    return new Response(fallback(), { headers: TEXT_HEADERS });
   }
 
-  try {
-    const client = new Anthropic();
+  const client = new Anthropic();
 
-    const priorTurns: Anthropic.MessageParam[] = history
-      .slice(-12)
-      .map((t) => ({
-        role: t.role === "coach" ? ("assistant" as const) : ("user" as const),
-        content: t.content,
-      }));
+  const priorTurns: Anthropic.MessageParam[] = history.slice(-12).map((t) => ({
+    role: t.role === "coach" ? ("assistant" as const) : ("user" as const),
+    content: t.content,
+  }));
 
-    // The current turn carries the live stats so the model always answers
-    // against fresh numbers, while the system persona stays cache-stable.
-    const messages: Anthropic.MessageParam[] = [
-      ...priorTurns,
-      {
-        role: "user",
-        content: `${contextBlock(context)}\n\n[My message]\n${message}`,
-      },
-    ];
+  // The current turn carries the live stats so the model always answers against
+  // fresh numbers, while the system persona stays cache-stable.
+  const messages: Anthropic.MessageParam[] = [
+    ...priorTurns,
+    {
+      role: "user",
+      content: `${contextBlock(context)}\n\n[My message]\n${message}`,
+    },
+  ];
 
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages,
-    });
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let emitted = false;
+      try {
+        const ms = client.messages.stream({
+          model: MODEL,
+          max_tokens: 1024,
+          system: [
+            { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+          ],
+          messages,
+        });
+        for await (const event of ms) {
+          if (
+            event.type === "content_block_delta" &&
+            event.delta.type === "text_delta"
+          ) {
+            emitted = true;
+            controller.enqueue(encoder.encode(event.delta.text));
+          }
+        }
+      } catch (e) {
+        if (e instanceof Anthropic.APIError) {
+          console.error(`Coach API error ${e.status}: ${e.message}`);
+        } else {
+          console.error("Coach error:", e);
+        }
+      }
+      // If the model produced nothing (error before first token), fall back.
+      if (!emitted) controller.enqueue(encoder.encode(fallback()));
+      controller.close();
+    },
+  });
 
-    const reply = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n")
-      .trim();
-
-    return NextResponse.json({
-      reply: reply || askCoach(message, context),
-      source: reply ? "ai" : "local",
-    });
-  } catch (e) {
-    // On any API failure, fall back to the built-in coach rather than erroring.
-    if (e instanceof Anthropic.APIError) {
-      console.error(`Coach API error ${e.status}: ${e.message}`);
-    } else {
-      console.error("Coach error:", e);
-    }
-    return NextResponse.json({ reply: askCoach(message, context), source: "local" });
-  }
+  return new Response(stream, { headers: TEXT_HEADERS });
 }

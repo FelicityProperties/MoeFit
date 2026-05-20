@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardCheck, Scale, Sparkles, RefreshCw } from "lucide-react";
+import { ClipboardCheck, Scale, Sparkles, RefreshCw, Loader2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import { buildDailyReview } from "@/lib/coach";
@@ -35,6 +35,7 @@ function Review() {
   );
 
   const [redo, setRedo] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [workedOut, setWorkedOut] = useState<boolean>(autoWorkedOut);
   const [ate, setAte] = useState(day.review?.ate ?? "");
   const [overate, setOverate] = useState(day.review?.overate ?? false);
@@ -48,9 +49,14 @@ function Review() {
   const target = calorieTarget(state.profile).target;
   const water = waterTargetMl(state.profile);
 
-  const generate = () => {
+  const generate = async () => {
     if (weight) setWeight(Number(weight));
     setEnergy(energy);
+
+    const missionsDone = day.missions.filter((m) => m.done).length;
+    const missionsTotal = day.missions.length;
+
+    // Score + a rule-based report (the latter is the offline fallback).
     const review = buildDailyReview({
       workedOut,
       overate,
@@ -61,11 +67,44 @@ function Review() {
       calorieTarget: target,
       waterConsumedMl: day.waterMl,
       waterTargetMl: water,
-      missionsDone: day.missions.filter((m) => m.done).length,
-      missionsTotal: day.missions.length,
+      missionsDone,
+      missionsTotal,
       workoutPlanned,
     });
+
+    setGenerating(true);
+    try {
+      // Let Claude write the report; the score stays rule-based for consistency.
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          score: review.score,
+          fallbackReport: review.report,
+          inputs: {
+            workedOut,
+            workoutPlanned,
+            overate,
+            energy,
+            ate,
+            improve,
+            caloriesConsumed: totals.calories,
+            calorieTarget: target,
+            waterConsumedMl: day.waterMl,
+            waterTargetMl: water,
+            missionsDone,
+            missionsTotal,
+          },
+        }),
+      });
+      const json = await res.json();
+      if (json.report) review.report = json.report;
+    } catch {
+      // keep the rule-based report
+    }
+
     setReview(review);
+    setGenerating(false);
     setRedo(false);
   };
 
@@ -149,8 +188,16 @@ function Review() {
             />
           </Field>
 
-          <button onClick={generate} className="btn-accent w-full">
-            <Sparkles size={16} /> Generate my daily score & report
+          <button onClick={generate} disabled={generating} className="btn-accent w-full">
+            {generating ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> Coach is writing your report…
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} /> Generate my daily score & report
+              </>
+            )}
           </button>
         </div>
       </Card>

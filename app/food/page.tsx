@@ -8,6 +8,7 @@ import {
   Droplets,
   Sparkles,
   Search,
+  Loader2,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
@@ -114,12 +115,30 @@ function OrderSmart() {
   const ctx = useCoachContext();
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<OrderSmartResult | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const analyze = () => {
-    if (!query.trim()) return;
-    const res = analyzeMealText(query.trim(), ctx);
-    setResult(res);
-    addOrder(res);
+  const analyze = async () => {
+    const q = query.trim();
+    if (!q || loading) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, context: ctx }),
+      });
+      const json = await res.json();
+      const out: OrderSmartResult = json.result ?? analyzeMealText(q, ctx);
+      setResult(out);
+      addOrder(out);
+    } catch {
+      const out = analyzeMealText(q, ctx);
+      setResult(out);
+      addOrder(out);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logIt = () => {
@@ -162,10 +181,17 @@ function OrderSmart() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && analyze()}
         />
-        <button onClick={analyze} className="btn-accent shrink-0">
-          <Search size={15} /> Analyze
+        <button onClick={analyze} disabled={loading} className="btn-accent shrink-0">
+          {loading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
+          {loading ? "Analyzing…" : "Analyze"}
         </button>
       </div>
+
+      {loading && (
+        <p className="mt-3 flex items-center gap-2 text-sm text-muted">
+          <Loader2 size={14} className="animate-spin" /> Coach is checking that meal…
+        </p>
+      )}
 
       {result && (
         <div className="mt-4 space-y-3 rounded-xl border border-line bg-panel p-4 animate-fade-in">

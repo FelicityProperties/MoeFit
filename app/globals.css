@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #06080d;
+  color: #e8edf5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle radial glow background */
+body {
+  background-image:
+    radial-gradient(900px 500px at 100% -10%, rgba(255, 90, 31, 0.08), transparent 60%),
+    radial-gradient(700px 500px at -10% 10%, rgba(56, 189, 248, 0.06), transparent 55%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/5 bg-ink-850/80 p-5 shadow-glow backdrop-blur-sm;
+  }
+  .card-tight {
+    @apply rounded-2xl border border-white/5 bg-ink-850/80 p-4 shadow-glow;
+  }
+  .label {
+    @apply text-xs font-semibold uppercase tracking-wider text-white/40;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-ink-900 px-3 py-2 text-sm text-white outline-none transition focus:border-accent/60 focus:ring-1 focus:ring-accent/40;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-accent-soft shadow-accent;
+  }
+  .btn-ghost {
+    @apply btn border border-white/10 bg-white/5 text-white/80 hover:bg-white/10;
+  }
+  .btn-chip {
+    @apply inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/70 transition hover:bg-white/10;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ff5a1f;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.2);
+}

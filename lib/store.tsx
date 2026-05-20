@@ -24,6 +24,15 @@ import { freshState } from "./defaults";
 import { toDateKey } from "./date";
 
 const STORAGE_KEY = "moefit:v1";
+const STORAGE_TS = "moefit:v1:ts";
+
+// When true (set NEXT_PUBLIC_CLOUD_ENABLED=true on Vercel), the app gates behind
+// a passcode and syncs AppState to Neon Postgres via /api/state, using
+// localStorage as an offline cache. When false/unset, it's pure localStorage.
+export const CLOUD_ENABLED =
+  process.env.NEXT_PUBLIC_CLOUD_ENABLED === "true";
+
+export type CloudStatus = "local" | "syncing" | "synced" | "offline";
 
 // ---------------------------------------------------------------------------
 // Persistence
@@ -50,9 +59,31 @@ function saveState(state: AppState) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(STORAGE_TS, String(Date.now()));
   } catch {
     // storage full / disabled — fail silently
   }
+}
+
+function localTimestamp(): number {
+  if (typeof window === "undefined") return 0;
+  return Number(window.localStorage.getItem(STORAGE_TS) || 0);
+}
+
+// --- Cloud (Neon via /api/state) ---
+async function cloudGet(): Promise<{ data: AppState | null; updatedAt: string | null }> {
+  const res = await fetch("/api/state", { cache: "no-store" });
+  if (!res.ok) throw new Error(`GET /api/state ${res.status}`);
+  return res.json();
+}
+
+async function cloudPut(state: AppState): Promise<void> {
+  const res = await fetch("/api/state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(state),
+  });
+  if (!res.ok) throw new Error(`PUT /api/state ${res.status}`);
 }
 
 function uid(): string {
@@ -64,6 +95,7 @@ function uid(): string {
 interface StoreContextValue {
   state: AppState;
   hydrated: boolean;
+  cloudStatus: CloudStatus;
   // profile
   updateProfile: (patch: Partial<Profile>) => void;
   // days
@@ -113,17 +145,65 @@ function emptyDay(date: string, missions: string[]): DayLog {
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(() => freshState());
   const [hydrated, setHydrated] = useState(false);
+  const [cloudStatus, setCloudStatus] = useState<CloudStatus>(
+    CLOUD_ENABLED ? "syncing" : "local"
+  );
+  // Gates the cloud push effect until the initial server reconcile is done, so
+  // we never overwrite newer server data with stale local data on first load.
+  const syncReady = useRef(false);
+  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load once on mount (client only).
+  // Load once on mount (client only): localStorage first for instant UI, then
+  // reconcile with the cloud if enabled (last-write-wins by timestamp).
   useEffect(() => {
-    setState(loadState());
+    const local = loadState();
+    const localTs = localTimestamp();
+    setState(local);
     setHydrated(true);
+
+    if (!CLOUD_ENABLED) return;
+
+    (async () => {
+      try {
+        const remote = await cloudGet();
+        const remoteTs = remote.updatedAt
+          ? new Date(remote.updatedAt).getTime()
+          : 0;
+        if (remote.data && remoteTs >= localTs) {
+          const merged = { ...freshState(), ...remote.data };
+          setState(merged);
+          saveState(merged);
+        } else {
+          await cloudPut(local); // server empty or stale -> push local up
+        }
+        setCloudStatus("synced");
+      } catch {
+        setCloudStatus("offline");
+      } finally {
+        syncReady.current = true;
+      }
+    })();
   }, []);
 
-  // Persist on every change after hydration.
+  // Persist to localStorage on every change after hydration.
   useEffect(() => {
     if (hydrated) saveState(state);
   }, [state, hydrated]);
+
+  // Debounced write-through to the cloud after the initial reconcile.
+  useEffect(() => {
+    if (!CLOUD_ENABLED || !syncReady.current) return;
+    setCloudStatus("syncing");
+    if (pushTimer.current) clearTimeout(pushTimer.current);
+    pushTimer.current = setTimeout(() => {
+      cloudPut(state)
+        .then(() => setCloudStatus("synced"))
+        .catch(() => setCloudStatus("offline"));
+    }, 800);
+    return () => {
+      if (pushTimer.current) clearTimeout(pushTimer.current);
+    };
+  }, [state]);
 
   const updateProfile = useCallback((patch: Partial<Profile>) => {
     setState((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
@@ -301,6 +381,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     () => ({
       state,
       hydrated,
+      cloudStatus,
       updateProfile,
       getDay,
       setWeight,
@@ -326,6 +407,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [
       state,
       hydrated,
+      cloudStatus,
       updateProfile,
       getDay,
       setWeight,

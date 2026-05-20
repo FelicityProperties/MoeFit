@@ -72,26 +72,75 @@ npm run start   # run the production build
 
 1. Push this repo to GitHub.
 2. In [Vercel](https://vercel.com/new), **Import** the repo. Framework preset: **Next.js** (auto-detected).
-3. Click **Deploy**. No environment variables are required — it works out of the box.
+3. Click **Deploy**. No environment variables are required — it works out of the box in local-only mode.
 
-The app is a static-friendly Next.js app and needs no backend.
+The app is a static-friendly Next.js app and needs no backend to run.
+
+---
+
+## Cloud sync with Neon (optional, recommended for phone + laptop)
+
+By default everything is stored in your browser. To sync across devices, turn on
+**Neon Postgres** cloud sync. Your whole state is stored as a single JSONB row,
+with localStorage kept as an offline cache (it still works with no signal and
+syncs when you're back online).
+
+### Set it up on Vercel
+
+1. **Add Neon.** In your Vercel project → **Storage** → **Create Database** →
+   **Neon** (Postgres). Vercel provisions it and sets `DATABASE_URL` for you.
+   (Or create a DB at [neon.tech](https://neon.tech) and paste its connection
+   string into `DATABASE_URL` yourself.)
+2. **Add two env vars** in Vercel → Settings → Environment Variables:
+   - `NEXT_PUBLIC_CLOUD_ENABLED` = `true`
+   - `APP_PASSCODE` = a strong passcode you'll type to unlock the app
+3. **Redeploy.** On first load you'll see a passcode screen; the `user_state`
+   table is created automatically on the first save. The sidebar shows a live
+   **Synced / Syncing / Offline** indicator.
+
+No migrations to run, no schema to manage — the table is `CREATE TABLE IF NOT
+EXISTS`-ed on demand (`lib/db.ts`).
+
+### Run cloud mode locally
+
+```bash
+cp .env.example .env.local      # then fill in the three values below
+# NEXT_PUBLIC_CLOUD_ENABLED=true
+# DATABASE_URL=postgres://...    (from the Neon dashboard)
+# APP_PASSCODE=your-passcode
+npm run dev
+```
+
+### How auth works
+
+A single shared **passcode** gates the app (great for personal use). It's checked
+server-side; on success an httpOnly cookie (`sha256(passcode)`) is set and every
+`/api/state` call is verified against it. Endpoints: `app/api/auth/route.ts`
+(login/status/logout) and `app/api/state/route.ts` (read/write, JSONB). For true
+multi-user accounts later, swap the passcode for Auth.js / Clerk.
 
 ---
 
 ## Your data
 
-- Stored in `localStorage` under the key `moefit:v1`.
-- **Settings → Your Data** lets you **export** a JSON backup, **import** it on another device, or **reset** everything.
-- Data is per-browser/per-device. Back up before clearing your browser.
+- **Local mode:** stored in `localStorage` under `moefit:v1`.
+- **Cloud mode:** stored in Neon (`user_state` table, JSONB), cached locally.
+- **Settings → Your Data** lets you **export** a JSON backup, **import** it, or
+  **reset** everything. Conflicts resolve last-write-wins by timestamp.
 
 ---
 
-## Connecting a real AI / cloud later
+## Connecting a real AI later
 
-The code is structured with clear integration points (search the codebase for `INTEGRATION POINT`):
+The cloud database is already wired up (Neon, see above). The AI coach is still a
+fast offline rule-based engine and is the remaining pluggable piece — search the
+codebase for `INTEGRATION POINT`:
 
-- **Real AI coach** — `lib/coach.ts`. `askCoach()` and `analyzeMealText()` currently use a fast, offline rule-based engine. To use a real LLM, create an API route (e.g. `app/api/coach/route.ts`) that calls OpenAI/Anthropic, then `POST` the message + `CoachContext` (already assembled for you) and return the model reply. Gate it on `NEXT_PUBLIC_AI_PROVIDER`.
-- **Cloud sync** — `lib/store.tsx`. Replace `loadState()` / `saveState()` with Supabase/Firebase calls. The `AppState` shape is plain JSON and maps cleanly to a table/document.
+- **Real AI coach** — `lib/coach.ts`. `askCoach()` and `analyzeMealText()` use a
+  fast, offline rule-based engine. To use a real LLM, create an API route (e.g.
+  `app/api/coach/route.ts`) that calls OpenAI/Anthropic, then `POST` the message +
+  `CoachContext` (already assembled for you) and return the model reply. Gate it
+  on `NEXT_PUBLIC_AI_PROVIDER`.
 - Copy `.env.example` to `.env.local` and fill in keys when you're ready.
 
 ---
@@ -99,11 +148,16 @@ The code is structured with clear integration points (search the codebase for `I
 ## Project structure
 
 ```
-app/                 # routes (dashboard, food, workout, coach, progress, review, settings)
-components/          # AppShell (nav), UI primitives, gates
+app/
+  (routes)           # dashboard, food, workout, coach, progress, review, settings
+  api/auth/route.ts  # passcode login / status / logout
+  api/state/route.ts # read/write AppState JSONB (auth-guarded)
+components/          # AppShell (nav + sync badge), UI primitives, AuthGate, gates
 lib/
   types.ts           # data model
-  store.tsx          # localStorage-backed React context (the "database")
+  store.tsx          # React context: localStorage + optional Neon write-through
+  db.ts              # server-only Neon access (JSONB user_state)
+  auth.ts            # server-only passcode helpers
   calculations.ts    # BMR/TDEE, calorie & macro targets, daily totals
   coach.ts           # the rule-based AI engine (chat, Order Smart, daily review)
   foods.ts           # built-in food/restaurant knowledge base

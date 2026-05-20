@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { clsx } from "./ui";
 import { ReactNode } from "react";
+import { CLOUD_ENABLED, useStore, type CloudStatus } from "@/lib/store";
+import { Cloud, CloudOff, RefreshCw, HardDrive } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "Command", icon: LayoutDashboard },
@@ -57,9 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <p className="px-3 text-[11px] leading-relaxed text-white/25">
-          Your data is stored locally on this device.
-        </p>
+        <SyncIndicator />
       </aside>
 
       {/* Main */}
@@ -95,6 +95,33 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </nav>
     </div>
+  );
+}
+
+function SyncIndicator() {
+  const { cloudStatus } = useStore();
+
+  if (!CLOUD_ENABLED) {
+    return (
+      <p className="flex items-center gap-1.5 px-3 text-[11px] leading-relaxed text-white/25">
+        <HardDrive size={12} /> Saved locally on this device.
+      </p>
+    );
+  }
+
+  const meta: Record<CloudStatus, { icon: typeof Cloud; text: string; color: string }> = {
+    local: { icon: HardDrive, text: "Local", color: "text-white/40" },
+    syncing: { icon: RefreshCw, text: "Syncing…", color: "text-amber-300/80" },
+    synced: { icon: Cloud, text: "Synced to cloud", color: "text-emerald-300/80" },
+    offline: { icon: CloudOff, text: "Offline — saved locally", color: "text-white/40" },
+  };
+  const m = meta[cloudStatus];
+  const Icon = m.icon;
+  return (
+    <p className={clsx("flex items-center gap-1.5 px-3 text-[11px] font-medium", m.color)}>
+      <Icon size={12} className={cloudStatus === "syncing" ? "animate-spin" : ""} />
+      {m.text}
+    </p>
   );
 }
 

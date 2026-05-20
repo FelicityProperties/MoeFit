@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen md:flex">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 flex-col border-r border-white/[0.06] bg-ink-950/40 p-4 backdrop-blur-xl md:flex">
+      <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 flex-col border-r border-line bg-white/70 p-4 backdrop-blur-xl md:flex">
         <Brand />
         <nav className="mt-7 flex flex-1 flex-col gap-1">
           {NAV.map((item) => {
@@ -49,8 +49,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={clsx(
                   "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150",
                   active
-                    ? "bg-accent/[0.12] text-white shadow-[inset_0_0_0_1px_rgba(124,108,255,0.25)]"
-                    : "text-white/50 hover:bg-white/[0.05] hover:text-white"
+                    ? "bg-accent/[0.12] text-fg shadow-[inset_0_0_0_1px_rgba(124,108,255,0.25)]"
+                    : "text-muted hover:bg-panel hover:text-fg"
                 )}
               >
                 {active && (
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   size={18}
                   className={clsx(
                     "transition-colors",
-                    active ? "text-accent" : "text-white/40 group-hover:text-white/80"
+                    active ? "text-accent" : "text-faint group-hover:text-strong"
                   )}
                 />
                 {item.label}
@@ -74,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1">
         {/* Mobile top bar */}
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.06] bg-ink-950/70 px-4 py-3 backdrop-blur-xl md:hidden">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-white/80 px-4 py-3 backdrop-blur-xl md:hidden">
           <Brand compact />
         </header>
 
@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-white/[0.07] bg-ink-950/85 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-line bg-white/85 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -94,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               href={item.href}
               className={clsx(
                 "relative flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors",
-                active ? "text-accent" : "text-white/40"
+                active ? "text-accent" : "text-faint"
               )}
             >
               {active && (
@@ -115,17 +115,17 @@ function SyncIndicator() {
 
   if (!CLOUD_ENABLED) {
     return (
-      <p className="flex items-center gap-1.5 px-3 text-[11px] leading-relaxed text-white/25">
+      <p className="flex items-center gap-1.5 px-3 text-[11px] leading-relaxed text-faint">
         <HardDrive size={12} /> Saved locally on this device.
       </p>
     );
   }
 
   const meta: Record<CloudStatus, { icon: typeof Cloud; text: string; color: string }> = {
-    local: { icon: HardDrive, text: "Local", color: "text-white/40" },
-    syncing: { icon: RefreshCw, text: "Syncing…", color: "text-amber-300/80" },
-    synced: { icon: Cloud, text: "Synced to cloud", color: "text-emerald-300/80" },
-    offline: { icon: CloudOff, text: "Offline — saved locally", color: "text-white/40" },
+    local: { icon: HardDrive, text: "Local", color: "text-faint" },
+    syncing: { icon: RefreshCw, text: "Syncing…", color: "text-amber-600" },
+    synced: { icon: Cloud, text: "Synced to cloud", color: "text-emerald-600" },
+    offline: { icon: CloudOff, text: "Offline — saved locally", color: "text-faint" },
   };
   const m = meta[cloudStatus];
   const Icon = m.icon;
@@ -144,7 +144,7 @@ function Brand({ compact }: { compact?: boolean }) {
         <Flame size={20} className="text-white" />
       </div>
       <div className="leading-tight">
-        <div className="text-sm font-extrabold tracking-tight text-white">
+        <div className="text-sm font-extrabold tracking-tight text-fg">
           MoeFit
         </div>
         {!compact && (

@@ -76,7 +76,7 @@ function Summary() {
         <Bar label="Carbs" value={totals.carbs} max={macros.carbs} color="#38bdf8" unit="g" />
         <Bar label="Fat" value={totals.fat} max={macros.fat} color="#a78bfa" unit="g" />
       </div>
-      <p className="mt-3 text-xs text-white/40">{target.note}</p>
+      <p className="mt-3 text-xs text-faint">{target.note}</p>
     </Card>
   );
 }
@@ -97,8 +97,8 @@ function Bar({
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs">
-        <span className="font-semibold text-white/70">{label}</span>
-        <span className="text-white/40">
+        <span className="font-semibold text-strong">{label}</span>
+        <span className="text-faint">
           {value}
           {unit} / {max}
           {unit}
@@ -150,7 +150,7 @@ function OrderSmart() {
       icon={<Sparkles size={16} className="text-accent" />}
       className="border-accent/15"
     >
-      <p className="mb-3 text-sm text-white/50">
+      <p className="mb-3 text-sm text-muted">
         Order food a lot? Describe the restaurant meal and your coach tells you
         if it fits your weight-loss goal.
       </p>
@@ -168,7 +168,7 @@ function OrderSmart() {
       </div>
 
       {result && (
-        <div className="mt-4 space-y-3 rounded-xl border border-white/10 bg-ink-900/60 p-4 animate-fade-in">
+        <div className="mt-4 space-y-3 rounded-xl border border-line bg-panel p-4 animate-fade-in">
           <div className="flex flex-wrap items-center gap-2">
             <Pill tone={tone}>
               {result.verdict === "good"
@@ -182,15 +182,15 @@ function OrderSmart() {
             <Pill tone="neutral">C {result.carbs}g</Pill>
             <Pill tone="neutral">F {result.fat}g</Pill>
           </div>
-          <p className="text-sm text-white/75">{result.reasoning}</p>
+          <p className="text-sm text-strong">{result.reasoning}</p>
           <p className="text-sm font-medium text-accent">⏱ {result.timing}</p>
           {result.alternatives.length > 0 && (
             <div>
               <p className="label mb-1">Better options</p>
               <ul className="space-y-1">
                 {result.alternatives.map((a, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-white/70">
-                    <span className="text-emerald-400">→</span> {a}
+                  <li key={i} className="flex items-start gap-2 text-sm text-strong">
+                    <span className="text-emerald-600">→</span> {a}
                   </li>
                 ))}
               </ul>
@@ -351,21 +351,21 @@ function AddFood() {
           day.foods.map((f) => (
             <div
               key={f.id}
-              className="flex items-center gap-3 rounded-xl bg-ink-900/50 p-3"
+              className="flex items-center gap-3 rounded-xl bg-panel p-3"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">{f.name}</p>
-                <p className="text-xs text-white/40">
+                <p className="truncate text-sm font-semibold text-fg">{f.name}</p>
+                <p className="text-xs text-faint">
                   {f.time} · {f.source} · P{f.protein} C{f.carbs} F{f.fat}
                 </p>
               </div>
               <span className="shrink-0 text-sm font-bold text-accent">
                 {f.calories}
-                <span className="text-xs font-normal text-white/40"> kcal</span>
+                <span className="text-xs font-normal text-faint"> kcal</span>
               </span>
               <button
                 onClick={() => removeFood(f.id)}
-                className="shrink-0 rounded-lg p-1.5 text-white/30 transition hover:bg-rose-500/10 hover:text-rose-400"
+                className="shrink-0 rounded-lg p-1.5 text-faint transition hover:bg-rose-50 hover:text-rose-600"
                 aria-label="Remove"
               >
                 <Trash2 size={16} />
@@ -386,17 +386,17 @@ function Water() {
   const filled = Math.round(day.waterMl / 250);
 
   return (
-    <Card title="Water Intake" icon={<Droplets size={16} className="text-cyan-400" />}>
+    <Card title="Water Intake" icon={<Droplets size={16} className="text-cyan-600" />}>
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-3xl font-extrabold text-white">
+          <p className="text-3xl font-extrabold text-fg">
             {(day.waterMl / 1000).toFixed(2)}
-            <span className="text-lg text-white/40">
+            <span className="text-lg text-faint">
               {" "}
               / {(goal / 1000).toFixed(1)} L
             </span>
           </p>
-          <p className="text-xs text-white/40">~{glasses} glasses target</p>
+          <p className="text-xs text-faint">~{glasses} glasses target</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => addWater(250)} className="btn-ghost">
@@ -415,8 +415,8 @@ function Water() {
             className={clsx(
               "h-9 w-7 rounded-md border transition",
               i < filled
-                ? "border-cyan-400/40 bg-cyan-400/30"
-                : "border-white/10 bg-white/5 hover:bg-white/10"
+                ? "border-cyan-300 bg-cyan-100"
+                : "border-line bg-panel hover:bg-slate-200"
             )}
             aria-label={`Set ${(i + 1) * 250}ml`}
           />

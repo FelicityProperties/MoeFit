@@ -23,7 +23,7 @@ export function Card({
     <section className={clsx("card animate-fade-in", className)}>
       {(title || action) && (
         <header className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-white/80">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-strong">
             {icon}
             {title}
           </h2>
@@ -47,17 +47,17 @@ export function Stat({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-ink-900/60 p-3">
+    <div className="rounded-xl border border-line bg-panel p-3">
       <div className="label">{label}</div>
       <div
         className={clsx(
           "mt-1 text-2xl font-bold leading-none",
-          accent ? "text-accent" : "text-white"
+          accent ? "text-accent" : "text-fg"
         )}
       >
         {value}
       </div>
-      {sub && <div className="mt-1 text-xs text-white/40">{sub}</div>}
+      {sub && <div className="mt-1 text-xs text-faint">{sub}</div>}
     </div>
   );
 }
@@ -76,7 +76,7 @@ export function ProgressBar({
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
     <div
-      className="w-full overflow-hidden rounded-full bg-white/10"
+      className="w-full overflow-hidden rounded-full bg-slate-200"
       style={{ height }}
     >
       <div
@@ -116,7 +116,7 @@ export function Ring({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke="rgba(15,23,42,0.08)"
           strokeWidth={stroke}
         />
         <circle
@@ -147,11 +147,11 @@ export function Pill({
   tone?: "good" | "ok" | "avoid" | "neutral" | "accent";
 }) {
   const map = {
-    good: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20",
-    ok: "bg-amber-500/15 text-amber-300 border border-amber-500/20",
-    avoid: "bg-rose-500/15 text-rose-300 border border-rose-500/20",
+    good: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+    ok: "bg-amber-100 text-amber-700 border border-amber-200",
+    avoid: "bg-rose-100 text-rose-600 border border-rose-200",
     accent: "bg-accent/15 text-accent border border-accent/20",
-    neutral: "bg-white/5 text-white/60 border border-white/10",
+    neutral: "bg-panel text-muted border border-line",
   };
   return <span className={clsx("pill", map[tone])}>{children}</span>;
 }
@@ -166,10 +166,10 @@ export function EmptyState({
   hint?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 py-8 text-center">
-      {icon && <div className="text-white/30">{icon}</div>}
-      <p className="text-sm font-medium text-white/60">{title}</p>
-      {hint && <p className="max-w-xs text-xs text-white/35">{hint}</p>}
+    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line py-8 text-center">
+      {icon && <div className="text-faint">{icon}</div>}
+      <p className="text-sm font-medium text-muted">{title}</p>
+      {hint && <p className="max-w-xs text-xs text-faint">{hint}</p>}
     </div>
   );
 }
@@ -191,10 +191,10 @@ export function PageHeader({
         </div>
       )}
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-white">
+        <h1 className="text-2xl font-extrabold tracking-tight text-fg">
           {title}
         </h1>
-        {subtitle && <p className="text-sm text-white/50">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
       </div>
     </div>
   );

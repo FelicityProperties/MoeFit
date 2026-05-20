@@ -95,7 +95,7 @@ function Review() {
               value={ate}
               onChange={(e) => setAte(e.target.value)}
             />
-            <p className="mt-1 text-xs text-white/40">
+            <p className="mt-1 text-xs text-faint">
               Logged so far: {totals.calories} / {target} kcal
             </p>
           </Field>
@@ -116,7 +116,7 @@ function Review() {
               onChange={(e) => setEnergyState(Number(e.target.value))}
               className="w-full"
             />
-            <div className="mt-1 flex justify-between text-xs text-white/40">
+            <div className="mt-1 flex justify-between text-xs text-faint">
               <span>Drained</span>
               <span>Average</span>
               <span>Energized</span>
@@ -126,7 +126,7 @@ function Review() {
           {/* Weight */}
           <Field label="Today's weight (optional)">
             <div className="flex items-center gap-2">
-              <Scale size={18} className="text-white/40" />
+              <Scale size={18} className="text-faint" />
               <input
                 className="input max-w-[160px]"
                 type="number"
@@ -135,7 +135,7 @@ function Review() {
                 value={weight}
                 onChange={(e) => setWeightInput(e.target.value)}
               />
-              <span className="text-sm text-white/40">kg</span>
+              <span className="text-sm text-faint">kg</span>
             </div>
           </Field>
 
@@ -184,9 +184,9 @@ function ReviewResult({ onRedo }: { onRedo: () => void }) {
           stroke={12}
           color={scoreColor}
           label={
-            <span className="text-4xl font-extrabold text-white">{review.score}</span>
+            <span className="text-4xl font-extrabold text-fg">{review.score}</span>
           }
-          sub={<span className="text-xs font-semibold text-white/40">/ 100</span>}
+          sub={<span className="text-xs font-semibold text-faint">/ 100</span>}
         />
         <div className="flex-1 space-y-3 text-center sm:text-left">
           <div
@@ -195,14 +195,14 @@ function ReviewResult({ onRedo }: { onRedo: () => void }) {
           >
             {grade}
           </div>
-          <p className="text-sm leading-relaxed text-white/80">{review.report}</p>
+          <p className="text-sm leading-relaxed text-strong">{review.report}</p>
           <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
             <Tag>{review.workedOut ? "Trained ✅" : "No workout"}</Tag>
             <Tag>{review.overate ? "Overate ⚠️" : "Calories controlled ✅"}</Tag>
             <Tag>Energy {review.energy}/5</Tag>
           </div>
           {review.improve && (
-            <p className="rounded-xl bg-ink-900/60 p-3 text-sm text-white/70">
+            <p className="rounded-xl bg-panel p-3 text-sm text-strong">
               <span className="font-semibold text-accent">Tomorrow: </span>
               {review.improve}
             </p>
@@ -219,7 +219,7 @@ function ReviewResult({ onRedo }: { onRedo: () => void }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-white/80">{label}</p>
+      <p className="mb-2 text-sm font-semibold text-strong">{label}</p>
       {children}
     </div>
   );
@@ -248,9 +248,9 @@ function Toggle({
           "rounded-xl border px-3 py-2.5 text-sm font-semibold transition",
           value
             ? yesGood
-              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-              : "border-rose-500/40 bg-rose-500/15 text-rose-300"
-            : "border-white/10 bg-white/5 text-white/50 hover:bg-white/10"
+              ? "border-emerald-300 bg-emerald-100 text-emerald-700"
+              : "border-rose-300 bg-rose-100 text-rose-600"
+            : "border-line bg-panel text-muted hover:bg-slate-200"
         )}
       >
         {yes}
@@ -261,9 +261,9 @@ function Toggle({
           "rounded-xl border px-3 py-2.5 text-sm font-semibold transition",
           !value
             ? yesGood
-              ? "border-rose-500/40 bg-rose-500/15 text-rose-300"
-              : "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-            : "border-white/10 bg-white/5 text-white/50 hover:bg-white/10"
+              ? "border-rose-300 bg-rose-100 text-rose-600"
+              : "border-emerald-300 bg-emerald-100 text-emerald-700"
+            : "border-line bg-panel text-muted hover:bg-slate-200"
         )}
       >
         {no}
@@ -274,7 +274,7 @@ function Toggle({
 
 function Tag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/70">
+    <span className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-medium text-strong">
       {children}
     </span>
   );

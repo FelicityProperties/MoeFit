@@ -141,7 +141,7 @@ function ProfileForm() {
       </div>
 
       {/* Optional overrides */}
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/5 pt-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
         <div>
           <label className="label">Calorie target override</label>
           <input
@@ -198,16 +198,16 @@ function TargetsPreview() {
         <Stat label="Water" value={`${(water / 1000).toFixed(1)}L`} />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <span className="rounded-lg bg-ink-900/60 px-3 py-1.5 text-xs text-white/60">
+        <span className="rounded-lg bg-panel px-3 py-1.5 text-xs text-muted">
           BMI {bmiVal} · {bmiCategory(bmiVal)}
         </span>
         {target.capped && (
-          <span className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300">
+          <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-700">
             Plan adjusted for safety
           </span>
         )}
       </div>
-      <p className="mt-2 text-xs text-white/40">{target.note}</p>
+      <p className="mt-2 text-xs text-faint">{target.note}</p>
     </Card>
   );
 }
@@ -282,7 +282,7 @@ function ScheduleEditor() {
             </select>
             <button
               onClick={() => remove(s.id)}
-              className="rounded-lg p-2 text-white/30 transition hover:bg-rose-500/10 hover:text-rose-400"
+              className="rounded-lg p-2 text-faint transition hover:bg-rose-50 hover:text-rose-600"
               aria-label="Remove"
             >
               <X size={16} />
@@ -319,7 +319,7 @@ function MissionsEditor() {
         </button>
       }
     >
-      <p className="mb-3 text-xs text-white/40">
+      <p className="mb-3 text-xs text-faint">
         3-5 daily goals seeded each new day. (Today&apos;s list updates on save.)
       </p>
       <div className="space-y-2">
@@ -333,7 +333,7 @@ function MissionsEditor() {
             />
             <button
               onClick={() => remove(i)}
-              className="rounded-lg p-2 text-white/30 transition hover:bg-rose-500/10 hover:text-rose-400"
+              className="rounded-lg p-2 text-faint transition hover:bg-rose-50 hover:text-rose-600"
               aria-label="Remove"
             >
               <X size={16} />
@@ -387,7 +387,7 @@ function DataManagement() {
 
   return (
     <Card title="Your Data" icon={<Database size={16} className="text-accent" />}>
-      <p className="mb-3 text-xs text-white/40">
+      <p className="mb-3 text-xs text-faint">
         Everything is stored locally in this browser. Back it up regularly, or
         move it to another device. (Ready to connect Supabase/Firebase later.)
       </p>
@@ -400,7 +400,7 @@ function DataManagement() {
         </button>
         <button
           onClick={doReset}
-          className="btn border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
+          className="btn border border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100"
         >
           <Trash2 size={15} /> Reset all data
         </button>
@@ -417,7 +417,7 @@ function DataManagement() {
         }}
       />
       {msg && (
-        <p className="mt-3 rounded-lg bg-ink-900/60 px-3 py-2 text-xs text-white/70">
+        <p className="mt-3 rounded-lg bg-panel px-3 py-2 text-xs text-strong">
           {msg}
         </p>
       )}

@@ -60,12 +60,12 @@ export default function ProgressPage() {
 
 const tooltipStyle = {
   contentStyle: {
-    backgroundColor: "#0e131c",
-    border: "1px solid rgba(255,255,255,0.1)",
+    backgroundColor: "#ffffff",
+    border: "1px solid #e2e8f0",
     borderRadius: 12,
     fontSize: 12,
   },
-  labelStyle: { color: "rgba(255,255,255,0.6)" },
+  labelStyle: { color: "#475569" },
 };
 
 function Streaks() {
@@ -90,9 +90,9 @@ function Streaks() {
               <Icon size={20} />
             </div>
             <div>
-              <div className="text-2xl font-extrabold leading-none text-white">
+              <div className="text-2xl font-extrabold leading-none text-fg">
                 {it.value}
-                <span className="ml-1 text-xs font-medium text-white/40">
+                <span className="ml-1 text-xs font-medium text-faint">
                   day{it.value === 1 ? "" : "s"}
                 </span>
               </div>
@@ -124,11 +124,11 @@ function WeightChart() {
       ) : (
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+            <CartesianGrid stroke="rgba(15,23,42,0.07)" vertical={false} />
+            <XAxis dataKey="date" tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 11 }} />
             <YAxis
               domain={["dataMin - 2", "dataMax + 2"]}
-              tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+              tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 11 }}
             />
             <Tooltip {...tooltipStyle} />
             <ReferenceLine
@@ -170,9 +170,9 @@ function CaloriesChart() {
       ) : (
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
-            <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+            <CartesianGrid stroke="rgba(15,23,42,0.07)" vertical={false} />
+            <XAxis dataKey="date" tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 11 }} />
+            <YAxis tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 11 }} />
             <Tooltip {...tooltipStyle} />
             <ReferenceLine
               y={target}
@@ -212,7 +212,7 @@ function WorkoutChart() {
       </div>
       <ResponsiveContainer width="100%" height={160}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
-          <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+          <XAxis dataKey="date" tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 10 }} />
           <YAxis hide domain={[0, 1]} />
           <Tooltip {...tooltipStyle} formatter={(_v, _n, p) => [(p as any).payload.status, "status"]} />
           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
@@ -238,12 +238,12 @@ function WaterChart() {
   }));
 
   return (
-    <Card title="Water — Last 7 Days" icon={<Droplets size={16} className="text-cyan-400" />}>
+    <Card title="Water — Last 7 Days" icon={<Droplets size={16} className="text-cyan-600" />}>
       <ResponsiveContainer width="100%" height={160}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
-          <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
-          <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+          <CartesianGrid stroke="rgba(15,23,42,0.07)" vertical={false} />
+          <XAxis dataKey="date" tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 10 }} />
+          <YAxis tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 10 }} />
           <Tooltip {...tooltipStyle} formatter={(v) => [`${v} L`, "water"]} />
           <Bar dataKey="liters" fill="#06b6d4" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -260,16 +260,16 @@ function DisciplineChart() {
     <Card title="Weekly Discipline Score" icon={<Flame size={16} className="text-accent" />}>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <XAxis dataKey="weekLabel" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
-          <YAxis domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+          <CartesianGrid stroke="rgba(15,23,42,0.07)" vertical={false} />
+          <XAxis dataKey="weekLabel" tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 11 }} />
+          <YAxis domain={[0, 100]} tick={{ fill: "rgba(71,85,105,0.85)", fontSize: 11 }} />
           <Tooltip {...tooltipStyle} />
           <Line
             type="monotone"
             dataKey="avgScore"
-            stroke="#aef359"
+            stroke="#65a30d"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#aef359" }}
+            dot={{ r: 4, fill: "#65a30d" }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -281,7 +281,7 @@ function Notes() {
   const { state, setProgressNotes } = useStore();
   return (
     <Card title="Before / After Notes" icon={<NotebookPen size={16} className="text-accent" />}>
-      <p className="mb-2 text-xs text-white/40">
+      <p className="mb-2 text-xs text-faint">
         Track non-scale wins: how clothes fit, energy, mood, photos taken, measurements.
       </p>
       <textarea

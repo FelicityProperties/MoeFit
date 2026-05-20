@@ -61,7 +61,7 @@ function Chat() {
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/15 text-accent">
               <Sparkles size={26} />
             </div>
-            <p className="max-w-sm text-sm text-white/55">
+            <p className="max-w-sm text-sm text-muted">
               I&apos;m your personal coach. I&apos;ll keep you honest, disciplined,
               and on track. Ask me something, or tap a prompt below.
             </p>
@@ -81,7 +81,7 @@ function Chat() {
                 "max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                 m.role === "user"
                   ? "rounded-br-sm bg-accent text-white"
-                  : "rounded-bl-sm border border-white/10 bg-ink-900 text-white/85"
+                  : "rounded-bl-sm border border-line bg-panel text-strong"
               )}
             >
               {m.content}
@@ -91,7 +91,7 @@ function Chat() {
       </div>
 
       {/* Suggestions */}
-      <div className="flex gap-2 overflow-x-auto border-t border-white/5 px-4 py-3">
+      <div className="flex gap-2 overflow-x-auto border-t border-line px-4 py-3">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
@@ -104,11 +104,11 @@ function Chat() {
       </div>
 
       {/* Input */}
-      <div className="flex items-center gap-2 border-t border-white/5 p-3">
+      <div className="flex items-center gap-2 border-t border-line p-3">
         {messages.length > 0 && (
           <button
             onClick={clearChat}
-            className="rounded-lg p-2 text-white/30 transition hover:bg-white/5 hover:text-rose-400"
+            className="rounded-lg p-2 text-faint transition hover:bg-panel hover:text-rose-600"
             aria-label="Clear chat"
           >
             <Trash2 size={18} />

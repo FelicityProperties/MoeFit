@@ -62,22 +62,22 @@ function Gate({ children }: { children: ReactNode }) {
         <Flame size={30} className="text-white" />
       </div>
       <div className="text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight text-white">
+        <h1 className="text-2xl font-extrabold tracking-tight text-fg">
           MoeFit Command Center
         </h1>
         <p className="text-sm text-accent">Enter your passcode to continue</p>
       </div>
 
       {phase === "checking" && (
-        <Loader2 size={24} className="animate-spin text-white/40" />
+        <Loader2 size={24} className="animate-spin text-faint" />
       )}
 
       {phase === "unconfigured" && (
-        <div className="max-w-md rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100/90">
+        <div className="max-w-md rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           <p className="mb-1 flex items-center gap-2 font-semibold">
             <AlertTriangle size={16} /> Cloud sync is on, but no passcode is set.
           </p>
-          <p className="text-amber-100/70">
+          <p className="text-amber-700">
             Set the <code className="rounded bg-black/30 px-1">APP_PASSCODE</code>{" "}
             and <code className="rounded bg-black/30 px-1">DATABASE_URL</code>{" "}
             environment variables in Vercel, then redeploy. Or remove{" "}
@@ -92,7 +92,7 @@ function Gate({ children }: { children: ReactNode }) {
           <div className="relative">
             <Lock
               size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/30"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
             />
             <input
               type="password"
@@ -104,7 +104,7 @@ function Gate({ children }: { children: ReactNode }) {
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
           </div>
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          {error && <p className="text-xs text-rose-600">{error}</p>}
           <button
             onClick={submit}
             disabled={submitting}
@@ -112,7 +112,7 @@ function Gate({ children }: { children: ReactNode }) {
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : "Unlock"}
           </button>
-          <p className="text-center text-[11px] text-white/30">
+          <p className="text-center text-[11px] text-faint">
             Your data syncs securely to your private database.
           </p>
         </div>

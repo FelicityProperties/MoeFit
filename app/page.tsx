@@ -100,12 +100,12 @@ function Dashboard() {
       {/* Header */}
       <div className="flex flex-col gap-1">
         <div className="flex items-baseline justify-between">
-          <p className="text-sm font-semibold text-white/50">{prettyDate(now)}</p>
+          <p className="text-sm font-semibold text-muted">{prettyDate(now)}</p>
           <p className="font-mono text-sm font-bold text-accent">
             {prettyTime(now)}
           </p>
         </div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-white md:text-3xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-fg md:text-3xl">
           {greeting}, {profile.name.split(" ")[0]}.
         </h1>
       </div>
@@ -127,17 +127,17 @@ function Dashboard() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="label text-accent">Right now</div>
-            <p className="truncate text-lg font-bold text-white">
+            <p className="truncate text-lg font-bold text-fg">
               {currentItem?.label ?? "Plan your day"}
             </p>
             {nextItem && (
-              <p className="text-xs text-white/45">
+              <p className="text-xs text-faint">
                 Up next at {formatHour(nextItem.hour)}: {nextItem.label}
               </p>
             )}
           </div>
         </div>
-        <p className="mt-3 rounded-xl bg-ink-900/60 p-3 text-sm text-white/70">
+        <p className="mt-3 rounded-xl bg-panel p-3 text-sm text-strong">
           <Flame size={14} className="mr-1 inline text-accent" />
           {coachLine(ctx)}
         </p>
@@ -153,19 +153,19 @@ function Dashboard() {
             stroke={9}
             color={overBudget ? "#f43f5e" : "#7c6cff"}
             label={
-              <span className="text-lg font-extrabold text-white">
+              <span className="text-lg font-extrabold text-fg">
                 {caloriesLeft}
               </span>
             }
-            sub={<span className="text-[10px] text-white/40">left</span>}
+            sub={<span className="text-[10px] text-faint">left</span>}
           />
           <div>
             <div className="label">Calories</div>
-            <div className="text-sm font-bold text-white">
+            <div className="text-sm font-bold text-fg">
               {totals.calories}
-              <span className="text-white/40"> / {target.target}</span>
+              <span className="text-faint"> / {target.target}</span>
             </div>
-            <div className="text-[11px] text-white/40">
+            <div className="text-[11px] text-faint">
               {overBudget ? "Over budget" : `${caloriesLeft} remaining`}
             </div>
           </div>
@@ -179,15 +179,15 @@ function Dashboard() {
             stroke={9}
             color="#06b6d4"
             label={
-              <span className="text-base font-extrabold text-white">
+              <span className="text-base font-extrabold text-fg">
                 {(day.waterMl / 1000).toFixed(1)}L
               </span>
             }
-            sub={<span className="text-[10px] text-white/40">water</span>}
+            sub={<span className="text-[10px] text-faint">water</span>}
           />
           <div>
             <div className="label">Water</div>
-            <div className="text-sm font-bold text-white">
+            <div className="text-sm font-bold text-fg">
               {(day.waterMl / 1000).toFixed(2)} /{" "}
               {(waterGoal / 1000).toFixed(1)}L
             </div>
@@ -217,7 +217,7 @@ function Dashboard() {
       <Card title="Today's Mission" icon={<Target size={16} className="text-accent" />}>
         <div className="space-y-2">
           {day.missions.length === 0 && (
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-faint">
               No missions set. Add them in Settings.
             </p>
           )}
@@ -228,19 +228,19 @@ function Dashboard() {
               className={clsx(
                 "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition",
                 m.done
-                  ? "border-emerald-500/20 bg-emerald-500/10"
-                  : "border-white/5 bg-ink-900/50 hover:bg-white/5"
+                  ? "border-emerald-200 bg-emerald-50"
+                  : "border-line bg-panel hover:bg-panel"
               )}
             >
               {m.done ? (
-                <CheckCircle2 size={20} className="shrink-0 text-emerald-400" />
+                <CheckCircle2 size={20} className="shrink-0 text-emerald-600" />
               ) : (
-                <Circle size={20} className="shrink-0 text-white/30" />
+                <Circle size={20} className="shrink-0 text-faint" />
               )}
               <span
                 className={clsx(
                   "text-sm font-medium",
-                  m.done ? "text-white/40 line-through" : "text-white"
+                  m.done ? "text-faint line-through" : "text-fg"
                 )}
               >
                 {m.text}
@@ -248,7 +248,7 @@ function Dashboard() {
             </button>
           ))}
           {day.missions.length > 0 && (
-            <p className="pt-1 text-xs text-white/40">
+            <p className="pt-1 text-xs text-faint">
               {day.missions.filter((m) => m.done).length} / {day.missions.length}{" "}
               complete
             </p>
@@ -286,7 +286,7 @@ function Dashboard() {
                   isPast && "opacity-40"
                 )}
               >
-                <span className="w-12 shrink-0 font-mono text-xs font-bold text-white/50">
+                <span className="w-12 shrink-0 font-mono text-xs font-bold text-muted">
                   {formatHour(item.hour)}
                 </span>
                 <span
@@ -301,7 +301,7 @@ function Dashboard() {
                 <span
                   className={clsx(
                     "flex-1 text-sm",
-                    isCurrent ? "font-bold text-white" : "text-white/70"
+                    isCurrent ? "font-bold text-fg" : "text-strong"
                   )}
                 >
                   {item.label}
@@ -323,13 +323,13 @@ function Dashboard() {
             return (
               <div
                 key={b.id}
-                className="flex items-center justify-between gap-2 rounded-xl bg-ink-900/50 p-3"
+                className="flex items-center justify-between gap-2 rounded-xl bg-panel p-3"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">
+                  <p className="truncate text-sm font-semibold text-fg">
                     {b.title}
                   </p>
-                  <p className="truncate text-xs text-white/40">
+                  <p className="truncate text-xs text-faint">
                     {b.durationMin > 0 ? `${b.durationMin} min · ` : ""}
                     {b.estCalories > 0 ? `~${b.estCalories} kcal` : "Recovery"}
                   </p>
@@ -338,10 +338,10 @@ function Dashboard() {
                   className={clsx(
                     "pill shrink-0",
                     status === "completed"
-                      ? "bg-emerald-500/15 text-emerald-300"
+                      ? "bg-emerald-100 text-emerald-700"
                       : status === "skipped"
-                      ? "bg-rose-500/15 text-rose-300"
-                      : "bg-white/5 text-white/50"
+                      ? "bg-rose-100 text-rose-600"
+                      : "bg-panel text-muted"
                   )}
                 >
                   {status}
@@ -374,8 +374,8 @@ function MacroRow({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="font-semibold text-white/70">{label}</span>
-        <span className="text-white/40">
+        <span className="font-semibold text-strong">{label}</span>
+        <span className="text-faint">
           {value}
           {unit} / {max}
           {unit}

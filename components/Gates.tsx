@@ -14,7 +14,7 @@ export function HydrationGate({ children }: { children: ReactNode }) {
         <div className="grid h-12 w-12 animate-pulse place-items-center rounded-2xl bg-accent/20 text-accent">
           <Flame size={24} />
         </div>
-        <p className="text-sm text-white/40">Loading your command center…</p>
+        <p className="text-sm text-faint">Loading your command center…</p>
       </div>
     );
   }
@@ -29,10 +29,10 @@ export function SetupPrompt() {
         <Flame size={30} className="text-white" />
       </div>
       <div className="space-y-1.5">
-        <h1 className="text-2xl font-extrabold tracking-tight text-white">
+        <h1 className="text-2xl font-extrabold tracking-tight text-fg">
           Welcome to MoeFit Command Center
         </h1>
-        <p className="max-w-md text-sm text-white/50">
+        <p className="max-w-md text-sm text-muted">
           Your personal operating system for weight loss, food control,
           discipline, and daily structure. Let&apos;s set up your profile so I
           can build your plan and coach you properly.
@@ -41,7 +41,7 @@ export function SetupPrompt() {
       <Link href="/settings" className="btn-accent">
         Set up my profile <ArrowRight size={16} />
       </Link>
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-faint">
         Everything is saved locally on this device. No account needed.
       </p>
     </div>

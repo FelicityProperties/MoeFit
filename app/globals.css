@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
 body {
-  background-color: #08090d;
-  color: #e7eaf3;
+  background-color: #f4f6fc;
+  color: #0f172a;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -19,37 +19,36 @@ body {
   min-height: 100vh;
 }
 
-/* Aurora gradient mesh — soft, premium, animated. */
+/* Soft pastel gradient mesh so the page is never a flat white screen. */
 body::before {
   content: "";
   position: fixed;
-  inset: -20%;
+  inset: -25%;
   z-index: -2;
   background:
-    radial-gradient(45% 40% at 82% 0%, rgba(124, 108, 255, 0.22), transparent 70%),
-    radial-gradient(40% 45% at 2% 18%, rgba(56, 189, 248, 0.14), transparent 70%),
-    radial-gradient(50% 55% at 60% 110%, rgba(16, 185, 129, 0.12), transparent 70%);
-  filter: saturate(1.1);
-  animation: aurora 18s ease-in-out infinite;
+    radial-gradient(38% 38% at 80% 4%, rgba(124, 108, 255, 0.20), transparent 70%),
+    radial-gradient(34% 38% at 6% 12%, rgba(56, 189, 248, 0.18), transparent 70%),
+    radial-gradient(40% 44% at 92% 70%, rgba(244, 114, 182, 0.16), transparent 70%),
+    radial-gradient(44% 48% at 30% 104%, rgba(16, 185, 129, 0.14), transparent 70%);
+  filter: saturate(1.05);
+  animation: aurora 20s ease-in-out infinite;
 }
 
-/* Faint grid for depth, fading toward the edges. */
+/* Subtle dot pattern for texture, fading toward the center. */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 44px 44px;
-  -webkit-mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
-  mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+  background-image: radial-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, transparent, black 90%);
+  mask-image: radial-gradient(circle at 50% 40%, transparent, black 90%);
 }
 
 @layer components {
   .card {
-    @apply relative overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] p-5 shadow-glow backdrop-blur-xl;
+    @apply relative overflow-hidden rounded-3xl border border-line bg-white/80 p-5 shadow-glow backdrop-blur-xl;
   }
   /* Subtle top sheen on every card. */
   .card::before {
@@ -58,21 +57,21 @@ body::after {
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.9),
       transparent
     );
   }
   .card-tight {
-    @apply relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 shadow-soft backdrop-blur-xl;
+    @apply relative overflow-hidden rounded-2xl border border-line bg-white/80 p-4 shadow-soft backdrop-blur-xl;
   }
   .label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35;
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-faint;
   }
   .input {
-    @apply w-full rounded-xl border border-white/10 bg-ink-900/70 px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-accent/60 focus:ring-2 focus:ring-accent/25;
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-fg outline-none transition placeholder:text-faint focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
   }
   select.input {
-    @apply appearance-none bg-ink-900;
+    @apply appearance-none bg-white;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
@@ -82,13 +81,13 @@ body::after {
     background-image: linear-gradient(135deg, #8b7dff 0%, #6d5cf0 100%);
   }
   .btn-accent:hover {
-    filter: brightness(1.08);
+    filter: brightness(1.05);
   }
   .btn-ghost {
-    @apply btn border border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.09] hover:text-white;
+    @apply btn border border-line bg-white text-strong hover:bg-panel hover:text-fg;
   }
   .btn-chip {
-    @apply inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-white/65 transition hover:border-white/20 hover:bg-white/[0.09] hover:text-white;
+    @apply inline-flex items-center gap-1 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-medium text-muted transition hover:border-accent/40 hover:bg-panel hover:text-fg;
   }
   .pill {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
@@ -104,13 +103,13 @@ body::after {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(15, 23, 42, 0.16);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(15, 23, 42, 0.28);
   background-clip: padding-box;
 }
 
@@ -120,7 +119,7 @@ input[type="range"] {
   appearance: none;
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.12);
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -128,13 +127,12 @@ input[type="range"]::-webkit-slider-thumb {
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #9d91ff, #6d5cf0);
+  background: linear-gradient(135deg, #8b7dff, #6d5cf0);
   cursor: pointer;
-  box-shadow: 0 0 0 5px rgba(124, 108, 255, 0.18);
+  box-shadow: 0 0 0 5px rgba(109, 92, 240, 0.18);
 }
 
-/* Date input calendar icon -> light so it's visible on dark */
+/* Date input calendar icon */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
   cursor: pointer;
 }

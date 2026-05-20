@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Trash2, Sparkles, MessageSquareText } from "lucide-react";
+import { Send, Trash2, Sparkles, MessageSquareText, Loader2, Zap } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import { askCoach } from "@/lib/coach";
@@ -34,29 +34,76 @@ function Chat() {
   const { state, addChat, clearChat } = useStore();
   const ctx = useCoachContext();
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = state.chat;
 
+  // Check whether a real AI key is wired up on the server.
+  useEffect(() => {
+    fetch("/api/coach")
+      .then((r) => r.json())
+      .then((j) => setAiAvailable(Boolean(j.aiAvailable)))
+      .catch(() => setAiAvailable(false));
+  }, []);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.length]);
+  }, [messages.length, loading]);
 
-  const send = (text?: string) => {
+  const send = async (text?: string) => {
     const content = (text ?? input).trim();
-    if (!content) return;
+    if (!content || loading) return;
+
+    // Snapshot history before adding the new message.
+    const history = messages.slice(-12).map((m) => ({ role: m.role, content: m.content }));
     addChat({ role: "user", content });
-    // Local coach engine. INTEGRATION POINT: replace with API call for real AI.
-    const reply = askCoach(content, ctx);
     setInput("");
-    // small delay so the user message renders first
-    setTimeout(() => addChat({ role: "coach", content: reply }), 250);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: content, context: ctx, history }),
+      });
+      const json = await res.json();
+      addChat({ role: "coach", content: json.reply || askCoach(content, ctx) });
+    } catch {
+      // Network failure — fall back to the built-in coach so the chat still works.
+      addChat({ role: "coach", content: askCoach(content, ctx) });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Card className="flex h-[calc(100vh-220px)] min-h-[440px] flex-col p-0">
+      {/* Status badge */}
+      {aiAvailable !== null && (
+        <div className="flex items-center gap-2 border-b border-line px-4 py-2">
+          <span
+            className={clsx(
+              "pill",
+              aiAvailable
+                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                : "bg-panel text-muted border border-line"
+            )}
+          >
+            <Zap size={12} />
+            {aiAvailable ? "Smart AI coach" : "Built-in coach"}
+          </span>
+          {!aiAvailable && (
+            <span className="text-xs text-faint">
+              Add an ANTHROPIC_API_KEY to enable the full AI.
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && !loading && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/15 text-accent">
               <Sparkles size={26} />
@@ -88,6 +135,15 @@ function Chat() {
             </div>
           </div>
         ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm border border-line bg-panel px-4 py-3 text-sm text-muted">
+              <Loader2 size={14} className="animate-spin" />
+              Coach is thinking…
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Suggestions */}
@@ -96,6 +152,7 @@ function Chat() {
           <button
             key={s}
             onClick={() => send(s)}
+            disabled={loading}
             className="btn-chip shrink-0 whitespace-nowrap"
           >
             {s}
@@ -120,9 +177,15 @@ function Chat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
+          disabled={loading}
         />
-        <button onClick={() => send()} className="btn-accent shrink-0" aria-label="Send">
-          <Send size={16} />
+        <button
+          onClick={() => send()}
+          disabled={loading}
+          className="btn-accent shrink-0"
+          aria-label="Send"
+        >
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </button>
       </div>
     </Card>

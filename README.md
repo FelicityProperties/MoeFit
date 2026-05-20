@@ -130,18 +130,27 @@ multi-user accounts later, swap the passcode for Auth.js / Clerk.
 
 ---
 
-## Connecting a real AI later
+## Real AI coach (Claude)
 
-The cloud database is already wired up (Neon, see above). The AI coach is still a
-fast offline rule-based engine and is the remaining pluggable piece — search the
-codebase for `INTEGRATION POINT`:
+The chatbot at `/coach` is wired to **Claude** via `app/api/coach/route.ts` (using
+the official `@anthropic-ai/sdk`). It sends your live stats (calories left, water,
+today's workout, weight goal) plus recent chat history to the model, so answers are
+personalized and conversational.
 
-- **Real AI coach** — `lib/coach.ts`. `askCoach()` and `analyzeMealText()` use a
-  fast, offline rule-based engine. To use a real LLM, create an API route (e.g.
-  `app/api/coach/route.ts`) that calls OpenAI/Anthropic, then `POST` the message +
-  `CoachContext` (already assembled for you) and return the model reply. Gate it
-  on `NEXT_PUBLIC_AI_PROVIDER`.
-- Copy `.env.example` to `.env.local` and fill in keys when you're ready.
+To turn it on, set one environment variable (locally in `.env.local`, or in Vercel):
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+# optional: AI_MODEL=claude-haiku-4-5   (faster/cheaper; default is claude-opus-4-7)
+```
+
+Get a key at <https://console.anthropic.com>, then redeploy. The coach screen shows
+a **"Smart AI coach"** badge when it's connected.
+
+**No key? It still works.** Without `ANTHROPIC_API_KEY`, the app falls back to a
+fast, offline rule-based coach (`lib/coach.ts`) — the badge reads "Built-in coach".
+The same fallback kicks in automatically if an API call fails, so the chat never
+breaks. Order Smart and the daily review also use this built-in engine.
 
 ---
 

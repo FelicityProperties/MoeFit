@@ -71,7 +71,7 @@ function Summary() {
         <Stat label="Maintenance" value={target.maintenance} sub="kcal/day" />
       </div>
       <div className="mt-4 space-y-3">
-        <Bar label="Calories" value={totals.calories} max={target.target} color="#ff5a1f" />
+        <Bar label="Calories" value={totals.calories} max={target.target} color="#7c6cff" />
         <Bar label="Protein" value={totals.protein} max={macros.protein} color="#22c55e" unit="g" />
         <Bar label="Carbs" value={totals.carbs} max={macros.carbs} color="#38bdf8" unit="g" />
         <Bar label="Fat" value={totals.fat} max={macros.fat} color="#a78bfa" unit="g" />

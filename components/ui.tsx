@@ -65,7 +65,7 @@ export function Stat({
 export function ProgressBar({
   value,
   max,
-  color = "#ff5a1f",
+  color = "#7c6cff",
   height = 8,
 }: {
   value: number;
@@ -92,7 +92,7 @@ export function Ring({
   max,
   size = 120,
   stroke = 10,
-  color = "#ff5a1f",
+  color = "#7c6cff",
   label,
   sub,
 }: {

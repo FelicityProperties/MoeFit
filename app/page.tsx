@@ -44,7 +44,7 @@ const CATEGORY_COLOR: Record<ScheduleItem["category"], string> = {
   wake: "#eab308",
   work: "#38bdf8",
   meal: "#22c55e",
-  workout: "#ff5a1f",
+  workout: "#7c6cff",
   water: "#06b6d4",
   sleep: "#a78bfa",
   personal: "#f472b6",
@@ -151,7 +151,7 @@ function Dashboard() {
             max={target.target}
             size={84}
             stroke={9}
-            color={overBudget ? "#f43f5e" : "#ff5a1f"}
+            color={overBudget ? "#f43f5e" : "#7c6cff"}
             label={
               <span className="text-lg font-extrabold text-white">
                 {caloriesLeft}
@@ -259,7 +259,7 @@ function Dashboard() {
       {/* Macros */}
       <Card title="Macros Today" icon={<UtensilsCrossed size={16} className="text-accent" />}>
         <div className="space-y-3">
-          <MacroRow label="Protein" value={totals.protein} max={macros.protein} color="#ff5a1f" unit="g" />
+          <MacroRow label="Protein" value={totals.protein} max={macros.protein} color="#7c6cff" unit="g" />
           <MacroRow label="Carbs" value={totals.carbs} max={macros.carbs} color="#38bdf8" unit="g" />
           <MacroRow label="Fat" value={totals.fat} max={macros.fat} color="#a78bfa" unit="g" />
         </div>

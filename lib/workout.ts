@@ -149,7 +149,7 @@ export const WORKOUT_TYPE_META: Record<
   WorkoutBlock["type"],
   { label: string; color: string }
 > = {
-  gym: { label: "Gym", color: "#ff5a1f" },
+  gym: { label: "Gym", color: "#7c6cff" },
   cardio: { label: "Cardio", color: "#38bdf8" },
   run: { label: "Run", color: "#a78bfa" },
   hiit: { label: "HIIT", color: "#f43f5e" },

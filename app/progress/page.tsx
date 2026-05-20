@@ -72,7 +72,7 @@ function Streaks() {
   const { state } = useStore();
   const s = computeStreaks(state);
   const items = [
-    { label: "Workout", value: s.workout, icon: Dumbbell, color: "#ff5a1f" },
+    { label: "Workout", value: s.workout, icon: Dumbbell, color: "#7c6cff" },
     { label: "Clean Eating", value: s.cleanEating, icon: Salad, color: "#22c55e" },
     { label: "Calorie Control", value: s.calorieControl, icon: Flame, color: "#f43f5e" },
     { label: "Water", value: s.water, icon: Droplets, color: "#06b6d4" },
@@ -140,9 +140,9 @@ function WeightChart() {
             <Line
               type="monotone"
               dataKey="weight"
-              stroke="#ff5a1f"
+              stroke="#7c6cff"
               strokeWidth={3}
-              dot={{ r: 3, fill: "#ff5a1f" }}
+              dot={{ r: 3, fill: "#7c6cff" }}
               activeDot={{ r: 5 }}
             />
           </LineChart>
@@ -182,7 +182,7 @@ function CaloriesChart() {
             />
             <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
               {data.map((d, i) => (
-                <Cell key={i} fill={d.over ? "#f43f5e" : "#ff5a1f"} />
+                <Cell key={i} fill={d.over ? "#f43f5e" : "#7c6cff"} />
               ))}
             </Bar>
           </BarChart>

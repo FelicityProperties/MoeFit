@@ -8,44 +8,87 @@
 
 html,
 body {
-  background-color: #06080d;
-  color: #e8edf5;
+  background-color: #08090d;
+  color: #e7eaf3;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Subtle radial glow background */
 body {
-  background-image:
-    radial-gradient(900px 500px at 100% -10%, rgba(255, 90, 31, 0.08), transparent 60%),
-    radial-gradient(700px 500px at -10% 10%, rgba(56, 189, 248, 0.06), transparent 55%);
-  background-attachment: fixed;
+  position: relative;
   min-height: 100vh;
+}
+
+/* Aurora gradient mesh — soft, premium, animated. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -2;
+  background:
+    radial-gradient(45% 40% at 82% 0%, rgba(124, 108, 255, 0.22), transparent 70%),
+    radial-gradient(40% 45% at 2% 18%, rgba(56, 189, 248, 0.14), transparent 70%),
+    radial-gradient(50% 55% at 60% 110%, rgba(16, 185, 129, 0.12), transparent 70%);
+  filter: saturate(1.1);
+  animation: aurora 18s ease-in-out infinite;
+}
+
+/* Faint grid for depth, fading toward the edges. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-white/5 bg-ink-850/80 p-5 shadow-glow backdrop-blur-sm;
+    @apply relative overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] p-5 shadow-glow backdrop-blur-xl;
+  }
+  /* Subtle top sheen on every card. */
+  .card::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.18),
+      transparent
+    );
   }
   .card-tight {
-    @apply rounded-2xl border border-white/5 bg-ink-850/80 p-4 shadow-glow;
+    @apply relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 shadow-soft backdrop-blur-xl;
   }
   .label {
-    @apply text-xs font-semibold uppercase tracking-wider text-white/40;
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35;
   }
   .input {
-    @apply w-full rounded-xl border border-white/10 bg-ink-900 px-3 py-2 text-sm text-white outline-none transition focus:border-accent/60 focus:ring-1 focus:ring-accent/40;
+    @apply w-full rounded-xl border border-white/10 bg-ink-900/70 px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-accent/60 focus:ring-2 focus:ring-accent/25;
+  }
+  select.input {
+    @apply appearance-none bg-ink-900;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-40;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
   }
   .btn-accent {
-    @apply btn bg-accent text-white hover:bg-accent-soft shadow-accent;
+    @apply btn text-white shadow-accent;
+    background-image: linear-gradient(135deg, #8b7dff 0%, #6d5cf0 100%);
+  }
+  .btn-accent:hover {
+    filter: brightness(1.08);
   }
   .btn-ghost {
-    @apply btn border border-white/10 bg-white/5 text-white/80 hover:bg-white/10;
+    @apply btn border border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.09] hover:text-white;
   }
   .btn-chip {
-    @apply inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/70 transition hover:bg-white/10;
+    @apply inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-white/65 transition hover:border-white/20 hover:bg-white/[0.09] hover:text-white;
   }
   .pill {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
@@ -57,15 +100,21 @@ body {
   width: 10px;
   height: 10px;
 }
+::-webkit-scrollbar-track {
+  background: transparent;
+}
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.09);
   border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.18);
+  background-clip: padding-box;
 }
 
-/* Range input styling */
+/* Range input */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -76,10 +125,16 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
-  background: #ff5a1f;
+  background: linear-gradient(135deg, #9d91ff, #6d5cf0);
   cursor: pointer;
-  box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.2);
+  box-shadow: 0 0 0 5px rgba(124, 108, 255, 0.18);
+}
+
+/* Date input calendar icon -> light so it's visible on dark */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
 }

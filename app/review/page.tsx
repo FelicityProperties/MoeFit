@@ -162,7 +162,7 @@ function ReviewResult({ onRedo }: { onRedo: () => void }) {
   const { getDay } = useStore();
   const review = getDay().review!;
   const scoreColor =
-    review.score >= 85 ? "#22c55e" : review.score >= 60 ? "#ff5a1f" : "#f43f5e";
+    review.score >= 85 ? "#22c55e" : review.score >= 60 ? "#7c6cff" : "#f43f5e";
   const grade =
     review.score >= 90
       ? "Elite"

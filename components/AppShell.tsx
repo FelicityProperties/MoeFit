@@ -36,9 +36,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen md:flex">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-white/5 bg-ink-900/60 p-4 md:flex">
+      <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 flex-col border-r border-white/[0.06] bg-ink-950/40 p-4 backdrop-blur-xl md:flex">
         <Brand />
-        <nav className="mt-6 flex flex-1 flex-col gap-1">
+        <nav className="mt-7 flex flex-1 flex-col gap-1">
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -47,13 +47,22 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150",
                   active
-                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(255,90,31,0.25)]"
-                    : "text-white/55 hover:bg-white/5 hover:text-white"
+                    ? "bg-accent/[0.12] text-white shadow-[inset_0_0_0_1px_rgba(124,108,255,0.25)]"
+                    : "text-white/50 hover:bg-white/[0.05] hover:text-white"
                 )}
               >
-                <Icon size={18} />
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent" />
+                )}
+                <Icon
+                  size={18}
+                  className={clsx(
+                    "transition-colors",
+                    active ? "text-accent" : "text-white/40 group-hover:text-white/80"
+                  )}
+                />
                 {item.label}
               </Link>
             );
@@ -65,17 +74,17 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1">
         {/* Mobile top bar */}
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/5 bg-ink-950/80 px-4 py-3 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.06] bg-ink-950/70 px-4 py-3 backdrop-blur-xl md:hidden">
           <Brand compact />
         </header>
 
-        <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 md:px-8 md:pb-10 md:pt-8">
+        <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 md:px-8 md:pb-12 md:pt-9">
           {children}
         </main>
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-white/10 bg-ink-950/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-white/[0.07] bg-ink-950/85 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -84,11 +93,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition",
-                active ? "text-accent" : "text-white/45"
+                "relative flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors",
+                active ? "text-accent" : "text-white/40"
               )}
             >
-              <Icon size={19} />
+              {active && (
+                <span className="absolute top-0 h-0.5 w-7 rounded-full bg-accent" />
+              )}
+              <Icon size={20} />
               {item.label}
             </Link>
           );

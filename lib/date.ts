@@ -60,3 +60,30 @@ export function daysBetween(a: Date, b: Date): number {
 export function nowHour(): number {
   return new Date().getHours();
 }
+
+// --- Schedule clock helpers (hour + optional minute) ---
+
+export function minutesOfDay(hour: number, minute = 0): number {
+  return hour * 60 + minute;
+}
+
+/** "8am", "8:30am", "1:15pm" */
+export function formatClock(hour: number, minute = 0): string {
+  const ampm = hour < 12 ? "am" : "pm";
+  const hr = hour % 12 === 0 ? 12 : hour % 12;
+  const mm = minute > 0 ? `:${String(minute).padStart(2, "0")}` : "";
+  return `${hr}${mm}${ampm}`;
+}
+
+/** "08:30" for <input type="time"> */
+export function toTimeValue(hour: number, minute = 0): string {
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+export function parseTimeValue(value: string): { hour: number; minute: number } {
+  const [h, m] = value.split(":").map((n) => Number(n));
+  return {
+    hour: Number.isFinite(h) ? Math.min(23, Math.max(0, h)) : 0,
+    minute: Number.isFinite(m) ? Math.min(59, Math.max(0, m)) : 0,
+  };
+}

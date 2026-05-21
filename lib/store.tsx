@@ -118,6 +118,9 @@ interface StoreContextValue {
   setReview: (review: DayReview, date?: string) => void;
   // meal plan
   setMealPlan: (meals: MealSuggestion[], date?: string) => void;
+  // per-day schedule override ("adjust today")
+  setDaySchedule: (items: ScheduleItem[], date?: string) => void;
+  clearDaySchedule: (date?: string) => void;
   // chat
   addChat: (msg: Omit<ChatMessage, "id" | "createdAt">) => void;
   clearChat: () => void;
@@ -342,6 +345,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [mutateDay]
   );
 
+  const setDaySchedule = useCallback(
+    (items: ScheduleItem[], date?: string) => {
+      mutateDay(date, (d) => ({ ...d, scheduleOverride: items }));
+    },
+    [mutateDay]
+  );
+
+  const clearDaySchedule = useCallback(
+    (date?: string) => {
+      mutateDay(date, (d) => {
+        const next = { ...d };
+        delete next.scheduleOverride;
+        return next;
+      });
+    },
+    [mutateDay]
+  );
+
   const addChat = useCallback((msg: Omit<ChatMessage, "id" | "createdAt">) => {
     setState((s) => ({
       ...s,
@@ -415,6 +436,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setMissions,
       setReview,
       setMealPlan,
+      setDaySchedule,
+      clearDaySchedule,
       addChat,
       clearChat,
       addOrder,
@@ -444,6 +467,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setMissions,
       setReview,
       setMealPlan,
+      setDaySchedule,
+      clearDaySchedule,
       addChat,
       clearChat,
       addOrder,

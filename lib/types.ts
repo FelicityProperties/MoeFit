@@ -90,12 +90,16 @@ export interface DayLog {
   review?: DayReview;
   /** AI/built-in suggested meals for the day */
   mealPlan?: MealSuggestion[];
+  /** per-day schedule that overrides the template (set via "Adjust today") */
+  scheduleOverride?: ScheduleItem[];
 }
 
 export interface ScheduleItem {
   id: string;
   /** 0-23 */
   hour: number;
+  /** 0-59 (defaults to 0 when omitted) */
+  minute?: number;
   label: string;
   category: "wake" | "work" | "meal" | "workout" | "water" | "sleep" | "personal";
 }

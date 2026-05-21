@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { toTimeValue, parseTimeValue } from "@/lib/date";
 import {
   ACTIVITY_LABELS,
   bmi,
@@ -283,17 +284,15 @@ function ScheduleEditor() {
       <div className="space-y-2">
         {items.map((s) => (
           <div key={s.id} className="flex items-center gap-2">
-            <select
-              className="input max-w-[90px]"
-              value={s.hour}
-              onChange={(e) => update(s.id, { hour: Number(e.target.value) })}
-            >
-              {Array.from({ length: 24 }).map((_, h) => (
-                <option key={h} value={h}>
-                  {formatHour(h)}
-                </option>
-              ))}
-            </select>
+            <input
+              type="time"
+              className="input max-w-[120px]"
+              value={toTimeValue(s.hour, s.minute)}
+              onChange={(e) => {
+                const { hour, minute } = parseTimeValue(e.target.value);
+                update(s.id, { hour, minute });
+              }}
+            />
             <input
               className="input flex-1"
               value={s.label}
@@ -455,10 +454,4 @@ function DataManagement() {
       )}
     </Card>
   );
-}
-
-function formatHour(h: number): string {
-  const ampm = h < 12 ? "am" : "pm";
-  const hr = h % 12 === 0 ? 12 : h % 12;
-  return `${hr}:00${ampm}`;
 }

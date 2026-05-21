@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   Sun,
@@ -15,10 +16,21 @@ import {
   CheckCircle2,
   Circle,
   ArrowRight,
+  Pencil,
+  Trash2,
+  RotateCcw,
+  Check,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext, useNow } from "@/lib/hooks";
-import { prettyDate, prettyTime } from "@/lib/date";
+import {
+  prettyDate,
+  prettyTime,
+  minutesOfDay,
+  formatClock,
+  toTimeValue,
+  parseTimeValue,
+} from "@/lib/date";
 import {
   calorieTarget,
   dayTotals,
@@ -59,7 +71,9 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-  const { state, getDay, addWater, toggleMission } = useStore();
+  const { state, getDay, addWater, toggleMission, setDaySchedule, clearDaySchedule } =
+    useStore();
+  const [editingSchedule, setEditingSchedule] = useState(false);
   const now = useNow();
   const ctx = useCoachContext();
   const profile = state.profile;
@@ -83,21 +97,28 @@ function Dashboard() {
   const labelFor = (item: ScheduleItem) =>
     item.category === "workout" ? workoutLabel : item.label;
 
-  // Each day type has its own routine (weekday / Saturday / Sunday).
+  // Each day type has its own routine (weekday / Saturday / Sunday). A per-day
+  // override ("Adjust today") takes precedence when present.
   const dow = now.getDay(); // 0 = Sunday, 6 = Saturday
   const dayLabel = dow === 6 ? "Saturday" : dow === 0 ? "Sunday" : "Weekday";
-  const activeSchedule =
+  const template =
     dow === 6
       ? state.saturdaySchedule
       : dow === 0
       ? state.sundaySchedule
       : state.schedule;
+  const activeSchedule = day.scheduleOverride ?? template;
+  const adjustedToday = Boolean(day.scheduleOverride);
 
-  // Determine the active schedule item (latest one whose hour has passed).
-  const sorted = [...activeSchedule].sort((a, b) => a.hour - b.hour);
+  // Determine the active schedule item (latest one whose time has passed).
+  const nowMins = currentHour * 60 + now.getMinutes();
+  const sorted = [...activeSchedule].sort(
+    (a, b) => minutesOfDay(a.hour, a.minute) - minutesOfDay(b.hour, b.minute)
+  );
   const currentItem =
-    [...sorted].reverse().find((s) => s.hour <= currentHour) ?? sorted[0];
-  const nextItem = sorted.find((s) => s.hour > currentHour);
+    [...sorted].reverse().find((s) => minutesOfDay(s.hour, s.minute) <= nowMins) ??
+    sorted[0];
+  const nextItem = sorted.find((s) => minutesOfDay(s.hour, s.minute) > nowMins);
 
   const caloriesLeft = Math.max(0, target.target - totals.calories);
   const overBudget = totals.calories > target.target;
@@ -152,7 +173,7 @@ function Dashboard() {
             </p>
             {nextItem && (
               <p className="text-xs text-faint">
-                Up next at {formatHour(nextItem.hour)}: {labelFor(nextItem)}
+                Up next at {formatClock(nextItem.hour, nextItem.minute)}: {labelFor(nextItem)}
               </p>
             )}
           </div>
@@ -293,52 +314,150 @@ function Dashboard() {
         title="Today's Schedule"
         icon={<Sun size={16} className="text-accent" />}
         action={
-          <span className="pill bg-accent/15 text-accent">{dayLabel}</span>
+          <div className="flex items-center gap-2">
+            <span className="pill bg-accent/15 text-accent">{dayLabel}</span>
+            <button
+              onClick={() => setEditingSchedule((v) => !v)}
+              className="btn-chip"
+            >
+              {editingSchedule ? (
+                <>
+                  <Check size={12} /> Done
+                </>
+              ) : (
+                <>
+                  <Pencil size={12} /> Adjust
+                </>
+              )}
+            </button>
+          </div>
         }
       >
-        <div className="space-y-1.5">
-          {sorted.map((item) => {
-            const Icon = CATEGORY_ICON[item.category];
-            const isCurrent = item.id === currentItem?.id;
-            const isPast = item.hour < currentHour && !isCurrent;
-            return (
-              <div
-                key={item.id}
-                className={clsx(
-                  "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition",
-                  isCurrent
-                    ? "border-accent/30 bg-accent/10"
-                    : "border-transparent",
-                  isPast && "opacity-40"
-                )}
-              >
-                <span className="w-12 shrink-0 font-mono text-xs font-bold text-muted">
-                  {formatHour(item.hour)}
-                </span>
-                <span
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
-                  style={{
-                    backgroundColor: `${CATEGORY_COLOR[item.category]}1f`,
-                    color: CATEGORY_COLOR[item.category],
+        {editingSchedule ? (
+          <div className="space-y-2">
+            <p className="text-xs text-muted">
+              Change times just for today — running late, pushed lunch, late
+              night. Your normal {dayLabel.toLowerCase()} routine stays the same.
+            </p>
+            {sorted.map((item) => (
+              <div key={item.id} className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={toTimeValue(item.hour, item.minute)}
+                  onChange={(e) => {
+                    const { hour, minute } = parseTimeValue(e.target.value);
+                    setDaySchedule(
+                      activeSchedule.map((s) =>
+                        s.id === item.id ? { ...s, hour, minute } : s
+                      )
+                    );
                   }}
+                  className="input max-w-[120px]"
+                />
+                <input
+                  className="input flex-1"
+                  value={item.label}
+                  onChange={(e) =>
+                    setDaySchedule(
+                      activeSchedule.map((s) =>
+                        s.id === item.id ? { ...s, label: e.target.value } : s
+                      )
+                    )
+                  }
+                />
+                <button
+                  onClick={() =>
+                    setDaySchedule(activeSchedule.filter((s) => s.id !== item.id))
+                  }
+                  className="rounded-lg p-2 text-faint transition hover:bg-rose-50 hover:text-rose-600"
+                  aria-label="Remove"
                 >
-                  <Icon size={15} />
-                </span>
-                <span
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                onClick={() =>
+                  setDaySchedule([
+                    ...activeSchedule,
+                    {
+                      id: "d" + Date.now(),
+                      hour: 12,
+                      minute: 0,
+                      label: "New block",
+                      category: "personal",
+                    },
+                  ])
+                }
+                className="btn-chip"
+              >
+                <Plus size={13} /> Add block
+              </button>
+              {adjustedToday && (
+                <button
+                  onClick={() => {
+                    clearDaySchedule();
+                    setEditingSchedule(false);
+                  }}
+                  className="btn-chip"
+                >
+                  <RotateCcw size={13} /> Reset to my routine
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {adjustedToday && (
+              <p className="mb-1 flex items-center gap-1.5 text-xs text-accent">
+                <Pencil size={11} /> Adjusted for today
+              </p>
+            )}
+            {sorted.map((item) => {
+              const Icon = CATEGORY_ICON[item.category];
+              const isCurrent = item.id === currentItem?.id;
+              const isPast =
+                minutesOfDay(item.hour, item.minute) < nowMins && !isCurrent;
+              return (
+                <div
+                  key={item.id}
                   className={clsx(
-                    "flex-1 text-sm",
-                    isCurrent ? "font-bold text-fg" : "text-strong"
+                    "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition",
+                    isCurrent
+                      ? "border-accent/30 bg-accent/10"
+                      : "border-transparent",
+                    isPast && "opacity-40"
                   )}
                 >
-                  {labelFor(item)}
-                </span>
-                {isCurrent && (
-                  <span className="pill bg-accent/20 text-accent">now</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  <span className="w-14 shrink-0 font-mono text-xs font-bold text-muted">
+                    {formatClock(item.hour, item.minute)}
+                  </span>
+                  <span
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
+                    style={{
+                      backgroundColor: `${CATEGORY_COLOR[item.category]}1f`,
+                      color: CATEGORY_COLOR[item.category],
+                    }}
+                  >
+                    <Icon size={15} />
+                  </span>
+                  <span
+                    className={clsx(
+                      "flex-1 text-sm",
+                      isCurrent ? "font-bold text-fg" : "text-strong"
+                    )}
+                  >
+                    {labelFor(item)}
+                  </span>
+                  {isCurrent && (
+                    <span className="pill bg-accent/20 text-accent">now</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       {/* Workout shortcut */}
@@ -433,10 +552,4 @@ function coachLine(ctx: ReturnType<typeof useCoachContext>): string {
   if (hour < 22)
     return `Evening: clean, protein-forward dinner and start winding down. No night workouts — your training is in the morning. Prep your gear for tomorrow.`;
   return "It's late — no more food, hydrate, screens off, and get to bed. Early start = morning training.";
-}
-
-function formatHour(h: number): string {
-  const ampm = h < 12 ? "am" : "pm";
-  const hr = h % 12 === 0 ? 12 : h % 12;
-  return `${hr}${ampm}`;
 }

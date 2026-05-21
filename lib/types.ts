@@ -43,6 +43,17 @@ export interface FoodEntry {
   source: string;
 }
 
+export interface MealSuggestion {
+  /** Breakfast | Lunch | Dinner | Snack */
+  slot: string;
+  name: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export type WorkoutStatus = "pending" | "completed" | "skipped" | "modified";
 
 export interface WorkoutBlock {
@@ -77,6 +88,8 @@ export interface DayLog {
   missions: { text: string; done: boolean }[];
   energy?: number; // 1-5 quick log
   review?: DayReview;
+  /** AI/built-in suggested meals for the day */
+  mealPlan?: MealSuggestion[];
 }
 
 export interface ScheduleItem {

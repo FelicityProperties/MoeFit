@@ -15,6 +15,7 @@ import {
   DayLog,
   DayReview,
   FoodEntry,
+  MealSuggestion,
   OrderSmartResult,
   Profile,
   ScheduleItem,
@@ -115,6 +116,8 @@ interface StoreContextValue {
   setMissions: (missions: string[], date?: string) => void;
   // review
   setReview: (review: DayReview, date?: string) => void;
+  // meal plan
+  setMealPlan: (meals: MealSuggestion[], date?: string) => void;
   // chat
   addChat: (msg: Omit<ChatMessage, "id" | "createdAt">) => void;
   clearChat: () => void;
@@ -330,6 +333,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [mutateDay]
   );
 
+  const setMealPlan = useCallback(
+    (meals: MealSuggestion[], date?: string) => {
+      mutateDay(date, (d) => ({ ...d, mealPlan: meals }));
+    },
+    [mutateDay]
+  );
+
   const addChat = useCallback((msg: Omit<ChatMessage, "id" | "createdAt">) => {
     setState((s) => ({
       ...s,
@@ -394,6 +404,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleMission,
       setMissions,
       setReview,
+      setMealPlan,
       addChat,
       clearChat,
       addOrder,
@@ -420,6 +431,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleMission,
       setMissions,
       setReview,
+      setMealPlan,
       addChat,
       clearChat,
       addOrder,

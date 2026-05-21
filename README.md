@@ -19,6 +19,7 @@ Built with **Next.js 14 (App Router) + TypeScript + Tailwind CSS + Recharts**. A
 - Calorie target auto-calculated from your weight, goal, height, age, activity, and timeline (Mifflin-St Jeor BMR → TDEE → safe deficit).
 - Track calories + protein / carbs / fat / water against targets.
 - Food log with quick-add chips and a built-in food database.
+- **Meal Plan** — generate a full day of meals (breakfast, lunch, dinner, snack) sized to your calorie + protein target, with one-tap logging. Claude-powered when a key is set, with a built-in generator otherwise.
 - **Order Smart** — describe a restaurant/delivery meal and the coach tells you: is it good for weight loss, approx calories & macros, better alternatives, and whether to eat it now or avoid it. One tap to log it.
 
 ### 3. Workout Planner (`/workout`)

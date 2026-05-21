@@ -9,6 +9,8 @@ import {
   Sparkles,
   Search,
   Loader2,
+  ChefHat,
+  Check,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
@@ -20,7 +22,8 @@ import {
 } from "@/lib/calculations";
 import { matchFood, FOOD_DB } from "@/lib/foods";
 import { analyzeMealText } from "@/lib/coach";
-import { OrderSmartResult } from "@/lib/types";
+import { buildMealPlan } from "@/lib/meals";
+import { OrderSmartResult, MealSuggestion } from "@/lib/types";
 import {
   Card,
   PageHeader,
@@ -42,6 +45,7 @@ export default function FoodPage() {
       />
       <div className="space-y-5">
         <Summary />
+        <MealPlan />
         <OrderSmart />
         <AddFood />
         <Water />
@@ -107,6 +111,119 @@ function Bar({
       </div>
       <ProgressBar value={value} max={max} color={color} height={7} />
     </div>
+  );
+}
+
+function MealPlan() {
+  const { getDay, setMealPlan, addFood } = useStore();
+  const ctx = useCoachContext();
+  const day = getDay();
+  const meals = day.mealPlan;
+  const [loading, setLoading] = useState(false);
+
+  const generate = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: ctx }),
+      });
+      const json = await res.json();
+      setMealPlan(
+        json.meals ??
+          buildMealPlan(ctx.calorieTarget, ctx.proteinTarget, new Date().getDate())
+      );
+    } catch {
+      setMealPlan(
+        buildMealPlan(ctx.calorieTarget, ctx.proteinTarget, new Date().getDate())
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logMeal = (m: MealSuggestion) => {
+    addFood({
+      name: m.name,
+      calories: m.calories,
+      protein: m.protein,
+      carbs: m.carbs,
+      fat: m.fat,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      source: "plan",
+    });
+  };
+
+  const planCalories = meals?.reduce((a, m) => a + m.calories, 0) ?? 0;
+  const planProtein = meals?.reduce((a, m) => a + m.protein, 0) ?? 0;
+
+  return (
+    <Card
+      title="Today's Meal Plan"
+      icon={<ChefHat size={16} className="text-accent" />}
+      className="border-accent/15"
+      action={
+        meals ? (
+          <button onClick={generate} disabled={loading} className="btn-chip">
+            {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+            New plan
+          </button>
+        ) : undefined
+      }
+    >
+      {!meals ? (
+        <div className="text-center">
+          <p className="mb-3 text-sm text-muted">
+            Get a full day of meals — breakfast, lunch, dinner & a snack — built to
+            hit your <span className="font-semibold text-fg">{ctx.calorieTarget} kcal</span> and{" "}
+            <span className="font-semibold text-fg">{ctx.proteinTarget}g protein</span> target.
+          </p>
+          <button onClick={generate} disabled={loading} className="btn-accent mx-auto">
+            {loading ? (
+              <>
+                <Loader2 size={15} className="animate-spin" /> Building your plan…
+              </>
+            ) : (
+              <>
+                <ChefHat size={15} /> Plan my meals for today
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {meals.map((m, i) => (
+            <div key={i} className="rounded-xl border border-line bg-panel p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="pill bg-accent/15 text-accent">{m.slot}</span>
+                    <span className="text-sm font-bold text-fg">{m.name}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted">{m.description}</p>
+                  <p className="mt-1 text-xs text-faint">
+                    {m.calories} kcal · P{m.protein} C{m.carbs} F{m.fat}
+                  </p>
+                </div>
+                <button
+                  onClick={() => logMeal(m)}
+                  className="btn-chip shrink-0"
+                  aria-label={`Log ${m.slot}`}
+                >
+                  <Check size={13} /> Log
+                </button>
+              </div>
+            </div>
+          ))}
+          <p className="pt-1 text-xs text-faint">
+            Plan total: {planCalories} kcal · {planProtein}g protein (target{" "}
+            {ctx.calorieTarget} kcal · {ctx.proteinTarget}g)
+          </p>
+        </div>
+      )}
+    </Card>
   );
 }
 

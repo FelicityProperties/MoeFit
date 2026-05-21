@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext, useNow } from "@/lib/hooks";
-import { prettyDate, prettyTime, isWeekend } from "@/lib/date";
+import { prettyDate, prettyTime } from "@/lib/date";
 import {
   calorieTarget,
   dayTotals,
@@ -83,9 +83,15 @@ function Dashboard() {
   const labelFor = (item: ScheduleItem) =>
     item.category === "workout" ? workoutLabel : item.label;
 
-  // Weekend days follow a separate, later routine.
-  const weekend = isWeekend(now);
-  const activeSchedule = weekend ? state.weekendSchedule : state.schedule;
+  // Each day type has its own routine (weekday / Saturday / Sunday).
+  const dow = now.getDay(); // 0 = Sunday, 6 = Saturday
+  const dayLabel = dow === 6 ? "Saturday" : dow === 0 ? "Sunday" : "Weekday";
+  const activeSchedule =
+    dow === 6
+      ? state.saturdaySchedule
+      : dow === 0
+      ? state.sundaySchedule
+      : state.schedule;
 
   // Determine the active schedule item (latest one whose hour has passed).
   const sorted = [...activeSchedule].sort((a, b) => a.hour - b.hour);
@@ -287,9 +293,7 @@ function Dashboard() {
         title="Today's Schedule"
         icon={<Sun size={16} className="text-accent" />}
         action={
-          <span className="pill bg-accent/15 text-accent">
-            {weekend ? "Weekend" : "Weekday"}
-          </span>
+          <span className="pill bg-accent/15 text-accent">{dayLabel}</span>
         }
       >
         <div className="space-y-1.5">

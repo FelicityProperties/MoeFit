@@ -30,18 +30,32 @@ export const DEFAULT_SCHEDULE: ScheduleItem[] = [
   { id: "wd-sleep", hour: 23, label: "Sleep", category: "sleep" },
 ];
 
-// Default WEEKEND routine — relaxed start at 11am.
-export const DEFAULT_WEEKEND_SCHEDULE: ScheduleItem[] = [
-  { id: "we-wake", hour: 11, label: "Wake up + 500ml water", category: "wake" },
-  { id: "we-pre", hour: 11, label: "Light stretch + coffee", category: "personal" },
-  { id: "we-train", hour: 12, label: "Morning training", category: "workout" },
-  { id: "we-brunch", hour: 13, label: "High-protein brunch", category: "meal" },
-  { id: "we-activity", hour: 15, label: "Walk / activity / errands", category: "personal" },
-  { id: "we-water", hour: 16, label: "Water check (1.5L by now)", category: "water" },
-  { id: "we-snack", hour: 18, label: "Light meal — protein", category: "meal" },
-  { id: "we-dinner", hour: 20, label: "Healthy dinner, no junk", category: "meal" },
-  { id: "we-wind", hour: 22, label: "Wind down, no late food", category: "personal" },
-  { id: "we-sleep", hour: 23, label: "Sleep", category: "sleep" },
+// Default SATURDAY routine — relaxed 11am start, light training + errands.
+export const DEFAULT_SATURDAY_SCHEDULE: ScheduleItem[] = [
+  { id: "sat-wake", hour: 11, label: "Wake up + 500ml water", category: "wake" },
+  { id: "sat-pre", hour: 11, label: "Light stretch + coffee", category: "personal" },
+  { id: "sat-train", hour: 12, label: "Morning training", category: "workout" },
+  { id: "sat-brunch", hour: 13, label: "High-protein brunch", category: "meal" },
+  { id: "sat-activity", hour: 15, label: "Errands / activity / social", category: "personal" },
+  { id: "sat-water", hour: 16, label: "Water check (1.5L by now)", category: "water" },
+  { id: "sat-snack", hour: 18, label: "Light meal — protein", category: "meal" },
+  { id: "sat-dinner", hour: 20, label: "Dinner out — pick lean", category: "meal" },
+  { id: "sat-wind", hour: 22, label: "Wind down, no late food", category: "personal" },
+  { id: "sat-sleep", hour: 23, label: "Sleep", category: "sleep" },
+];
+
+// Default SUNDAY routine — full rest day, 11am start, meal prep & recovery.
+export const DEFAULT_SUNDAY_SCHEDULE: ScheduleItem[] = [
+  { id: "sun-wake", hour: 11, label: "Wake up + 500ml water", category: "wake" },
+  { id: "sun-stretch", hour: 11, label: "Easy stretch + coffee", category: "personal" },
+  { id: "sun-walk", hour: 12, label: "Light walk / mobility (rest day)", category: "personal" },
+  { id: "sun-brunch", hour: 13, label: "High-protein brunch", category: "meal" },
+  { id: "sun-prep", hour: 14, label: "Meal prep for the week", category: "personal" },
+  { id: "sun-water", hour: 16, label: "Water check (1.5L by now)", category: "water" },
+  { id: "sun-snack", hour: 18, label: "Light meal — protein", category: "meal" },
+  { id: "sun-dinner", hour: 20, label: "Healthy dinner, no junk", category: "meal" },
+  { id: "sun-wind", hour: 22, label: "Wind down, screens off", category: "sleep" },
+  { id: "sun-sleep", hour: 23, label: "Sleep", category: "sleep" },
 ];
 
 export const DEFAULT_MISSIONS = [
@@ -52,14 +66,15 @@ export const DEFAULT_MISSIONS = [
   "In bed by 11pm",
 ];
 
-export const CURRENT_VERSION = 3;
+export const CURRENT_VERSION = 4;
 
 export function freshState(): AppState {
   return {
     version: CURRENT_VERSION,
     profile: { ...DEFAULT_PROFILE },
     schedule: [...DEFAULT_SCHEDULE],
-    weekendSchedule: [...DEFAULT_WEEKEND_SCHEDULE],
+    saturdaySchedule: [...DEFAULT_SATURDAY_SCHEDULE],
+    sundaySchedule: [...DEFAULT_SUNDAY_SCHEDULE],
     defaultMissions: [...DEFAULT_MISSIONS],
     days: {},
     chat: [],
@@ -71,17 +86,20 @@ export function freshState(): AppState {
 /**
  * Upgrade a previously-saved state to the current version. Only routines are
  * replaced; profile, logs, chat, etc. are preserved.
- *   v2 → morning-training routine
- *   v3 → split into an 8am weekday routine + an 11am weekend routine
+ *   v3 → 8am weekday routine
+ *   v4 → separate Saturday + Sunday routines (was one weekend routine)
  */
 export function migrateState(state: AppState): AppState {
   let next = state;
   if ((next.version ?? 1) < 3) {
+    next = { ...next, schedule: [...DEFAULT_SCHEDULE], version: 3 };
+  }
+  if ((next.version ?? 1) < 4) {
     next = {
       ...next,
-      schedule: [...DEFAULT_SCHEDULE],
-      weekendSchedule: [...DEFAULT_WEEKEND_SCHEDULE],
-      version: 3,
+      saturdaySchedule: [...DEFAULT_SATURDAY_SCHEDULE],
+      sundaySchedule: [...DEFAULT_SUNDAY_SCHEDULE],
+      version: 4,
     };
   }
   return next;

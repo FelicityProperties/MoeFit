@@ -222,12 +222,24 @@ const CATEGORY_OPTIONS: ScheduleItem["category"][] = [
   "personal",
 ];
 
-function ScheduleEditor() {
-  const { state, setSchedule, setWeekendSchedule } = useStore();
-  const [mode, setMode] = useState<"weekday" | "weekend">("weekday");
+type RoutineMode = "weekday" | "saturday" | "sunday";
 
-  const current = mode === "weekday" ? state.schedule : state.weekendSchedule;
-  const setCurrent = mode === "weekday" ? setSchedule : setWeekendSchedule;
+function ScheduleEditor() {
+  const { state, setSchedule, setSaturdaySchedule, setSundaySchedule } = useStore();
+  const [mode, setMode] = useState<RoutineMode>("weekday");
+
+  const current =
+    mode === "weekday"
+      ? state.schedule
+      : mode === "saturday"
+      ? state.saturdaySchedule
+      : state.sundaySchedule;
+  const setCurrent =
+    mode === "weekday"
+      ? setSchedule
+      : mode === "saturday"
+      ? setSaturdaySchedule
+      : setSundaySchedule;
   const items = [...current].sort((a, b) => a.hour - b.hour);
 
   const update = (id: string, patch: Partial<ScheduleItem>) => {
@@ -252,19 +264,19 @@ function ScheduleEditor() {
         </button>
       }
     >
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        {(["weekday", "weekend"] as const).map((m) => (
+      <div className="mb-3 grid grid-cols-3 gap-2">
+        {(["weekday", "saturday", "sunday"] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
             className={
-              "rounded-lg border px-3 py-2 text-sm font-semibold capitalize transition " +
+              "rounded-lg border px-2 py-2 text-xs font-semibold capitalize transition sm:text-sm " +
               (mode === m
                 ? "border-accent/40 bg-accent/15 text-accent"
                 : "border-line bg-white text-muted hover:bg-panel")
             }
           >
-            {m === "weekday" ? "Weekday (Mon–Fri)" : "Weekend (Sat/Sun)"}
+            {m === "weekday" ? "Weekday" : m === "saturday" ? "Saturday" : "Sunday"}
           </button>
         ))}
       </div>

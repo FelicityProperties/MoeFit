@@ -125,8 +125,10 @@ export interface AppState {
   profile: Profile;
   /** weekday (Mon-Fri) hour-by-hour routine */
   schedule: ScheduleItem[];
-  /** weekend (Sat/Sun) hour-by-hour routine */
-  weekendSchedule: ScheduleItem[];
+  /** Saturday hour-by-hour routine */
+  saturdaySchedule: ScheduleItem[];
+  /** Sunday hour-by-hour routine */
+  sundaySchedule: ScheduleItem[];
   defaultMissions: string[];
   days: Record<string, DayLog>;
   chat: ChatMessage[];

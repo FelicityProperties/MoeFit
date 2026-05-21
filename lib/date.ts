@@ -60,9 +60,3 @@ export function daysBetween(a: Date, b: Date): number {
 export function nowHour(): number {
   return new Date().getHours();
 }
-
-/** Saturday or Sunday. */
-export function isWeekend(d: Date = new Date()): boolean {
-  const day = d.getDay();
-  return day === 0 || day === 6;
-}

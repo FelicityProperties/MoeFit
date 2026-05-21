@@ -125,6 +125,7 @@ interface StoreContextValue {
   addOrder: (result: OrderSmartResult) => void;
   // schedule + missions defaults
   setSchedule: (schedule: ScheduleItem[]) => void;
+  setWeekendSchedule: (schedule: ScheduleItem[]) => void;
   setDefaultMissions: (missions: string[]) => void;
   setProgressNotes: (notes: string) => void;
   // data management
@@ -362,6 +363,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, schedule }));
   }, []);
 
+  const setWeekendSchedule = useCallback((weekendSchedule: ScheduleItem[]) => {
+    setState((s) => ({ ...s, weekendSchedule }));
+  }, []);
+
   const setDefaultMissions = useCallback((missions: string[]) => {
     setState((s) => ({ ...s, defaultMissions: missions }));
   }, []);
@@ -409,6 +414,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       clearChat,
       addOrder,
       setSchedule,
+      setWeekendSchedule,
       setDefaultMissions,
       setProgressNotes,
       exportData,
@@ -436,6 +442,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       clearChat,
       addOrder,
       setSchedule,
+      setWeekendSchedule,
       setDefaultMissions,
       setProgressNotes,
       exportData,

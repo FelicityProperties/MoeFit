@@ -123,7 +123,10 @@ export interface OrderSmartResult {
 export interface AppState {
   version: number;
   profile: Profile;
+  /** weekday (Mon-Fri) hour-by-hour routine */
   schedule: ScheduleItem[];
+  /** weekend (Sat/Sun) hour-by-hour routine */
+  weekendSchedule: ScheduleItem[];
   defaultMissions: string[];
   days: Record<string, DayLog>;
   chat: ChatMessage[];

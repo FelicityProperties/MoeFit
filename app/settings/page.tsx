@@ -223,17 +223,21 @@ const CATEGORY_OPTIONS: ScheduleItem["category"][] = [
 ];
 
 function ScheduleEditor() {
-  const { state, setSchedule } = useStore();
-  const items = [...state.schedule].sort((a, b) => a.hour - b.hour);
+  const { state, setSchedule, setWeekendSchedule } = useStore();
+  const [mode, setMode] = useState<"weekday" | "weekend">("weekday");
+
+  const current = mode === "weekday" ? state.schedule : state.weekendSchedule;
+  const setCurrent = mode === "weekday" ? setSchedule : setWeekendSchedule;
+  const items = [...current].sort((a, b) => a.hour - b.hour);
 
   const update = (id: string, patch: Partial<ScheduleItem>) => {
-    setSchedule(state.schedule.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+    setCurrent(current.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   };
-  const remove = (id: string) => setSchedule(state.schedule.filter((s) => s.id !== id));
+  const remove = (id: string) => setCurrent(current.filter((s) => s.id !== id));
   const add = () => {
     const id = "s" + Date.now();
-    setSchedule([
-      ...state.schedule,
+    setCurrent([
+      ...current,
       { id, hour: 12, label: "New routine block", category: "personal" },
     ]);
   };
@@ -248,6 +252,22 @@ function ScheduleEditor() {
         </button>
       }
     >
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        {(["weekday", "weekend"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={
+              "rounded-lg border px-3 py-2 text-sm font-semibold capitalize transition " +
+              (mode === m
+                ? "border-accent/40 bg-accent/15 text-accent"
+                : "border-line bg-white text-muted hover:bg-panel")
+            }
+          >
+            {m === "weekday" ? "Weekday (Mon–Fri)" : "Weekend (Sat/Sun)"}
+          </button>
+        ))}
+      </div>
       <div className="space-y-2">
         {items.map((s) => (
           <div key={s.id} className="flex items-center gap-2">

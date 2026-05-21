@@ -29,6 +29,12 @@ export interface CoachContext {
   workoutPlannedToday: string; // e.g. "Lower Body Strength + HIIT"
   weightKg: number;
   goalWeightKg: number;
+  /** What the routine says they should be doing right now. */
+  currentActivity?: string;
+  /** Next routine item, e.g. "Lunch at 1:30pm". */
+  nextActivity?: string;
+  /** Today's actual routine (incl. same-day "Adjust today" tweaks). */
+  scheduleToday?: { time: string; label: string }[];
 }
 
 const STRICT_OPENERS = [

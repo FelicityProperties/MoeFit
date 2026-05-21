@@ -21,6 +21,7 @@ Their training schedule (important):
 - Muay Thai on Tuesday and Thursday mornings; gym strength Monday & Friday; cardio Wednesday; active recovery Saturday; rest Sunday.
 
 Rules:
+- For timing questions ("should I work out now or later?", "is it too late to...?"), use "Today's actual schedule" below — those are their real times for today, including any same-day adjustments — plus the current hour. Reference the actual scheduled time when you answer.
 - Keep replies short and punchy: 2-5 sentences. This is a chat, not an essay.
 - When they ask about a specific food or restaurant meal, give a rough calorie estimate, a clear verdict (good / okay / avoid for weight loss), and one better alternative if it's not great. Factor in how many calories they have left today.
 - When they're being lazy or making excuses, call it out kindly and give them the smallest next action to start.
@@ -30,7 +31,7 @@ Rules:
 - You are not a medical professional; for medical concerns tell them to consult a doctor.`;
 
 function contextBlock(c: CoachContext): string {
-  return [
+  const lines = [
     `[Live stats — ${c.name || "the user"}]`,
     `Local hour: ${c.hour}:00`,
     `Calorie target: ${c.calorieTarget} kcal | eaten: ${c.caloriesConsumed} | remaining: ${c.caloriesRemaining}`,
@@ -38,7 +39,16 @@ function contextBlock(c: CoachContext): string {
     `Water: ${c.waterConsumedMl}ml of ${c.waterTargetMl}ml`,
     `Today's workout: ${c.workoutPlannedToday} (${c.workedOutToday ? "DONE" : "not done yet"})`,
     `Weight: ${c.weightKg}kg, goal ${c.goalWeightKg}kg`,
-  ].join("\n");
+  ];
+  if (c.currentActivity) lines.push(`Right now they should be: ${c.currentActivity}`);
+  if (c.nextActivity) lines.push(`Up next: ${c.nextActivity}`);
+  if (c.scheduleToday && c.scheduleToday.length > 0) {
+    lines.push(
+      "Today's actual schedule (their real times for today, including any same-day tweaks):"
+    );
+    for (const s of c.scheduleToday) lines.push(`  ${s.time} — ${s.label}`);
+  }
+  return lines.join("\n");
 }
 
 interface ChatTurn {

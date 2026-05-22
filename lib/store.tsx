@@ -33,6 +33,11 @@ const STORAGE_TS = "moefit:v1:ts";
 export const CLOUD_ENABLED =
   process.env.NEXT_PUBLIC_CLOUD_ENABLED === "true";
 
+// When true, the cloud gate uses Google sign-in (Auth.js) instead of a passcode,
+// and each user's data is keyed by their Google email. Requires CLOUD_ENABLED.
+export const GOOGLE_AUTH =
+  process.env.NEXT_PUBLIC_GOOGLE_AUTH === "true";
+
 export type CloudStatus = "local" | "syncing" | "synced" | "offline";
 
 // ---------------------------------------------------------------------------

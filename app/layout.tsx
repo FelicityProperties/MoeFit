@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { StoreProvider } from "@/lib/store";
-import { AppShell } from "@/components/AppShell";
-import { AuthGate } from "@/components/AuthGate";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -29,11 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
-        <StoreProvider>
-          <AuthGate>
-            <AppShell>{children}</AppShell>
-          </AuthGate>
-        </StoreProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

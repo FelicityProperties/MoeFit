@@ -115,11 +115,24 @@ npm run dev
 
 ### How auth works
 
-A single shared **passcode** gates the app (great for personal use). It's checked
-server-side; on success an httpOnly cookie (`sha256(passcode)`) is set and every
-`/api/state` call is verified against it. Endpoints: `app/api/auth/route.ts`
-(login/status/logout) and `app/api/state/route.ts` (read/write, JSONB). For true
-multi-user accounts later, swap the passcode for Auth.js / Clerk.
+Two options gate the cloud:
+
+**Passcode** (simplest) — a single shared secret. Checked server-side; on success
+an httpOnly cookie (`sha256(passcode)`) is set and every `/api/state` call is
+verified against it. Endpoints: `app/api/passcode/route.ts` + `app/api/state`.
+
+**Google sign-in** (recommended for multi-device) — set `NEXT_PUBLIC_GOOGLE_AUTH=true`
+and the app gates behind "Continue with Google" (Auth.js / NextAuth). Each Google
+account's data is keyed by email in Neon, so signing in on your phone shows the
+same data as your laptop. Setup:
+
+1. Google Cloud Console → APIs & Services → Credentials → **Create OAuth client ID**
+   (type **Web application**). Add the **Authorized redirect URI**:
+   `https://YOUR-DOMAIN/api/auth/callback/google`
+2. In Vercel set: `NEXT_PUBLIC_CLOUD_ENABLED=true`, `NEXT_PUBLIC_GOOGLE_AUTH=true`,
+   `DATABASE_URL` (Neon), `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and
+   `AUTH_SECRET` (generate with `openssl rand -base64 32`). Redeploy.
+3. Sign out anytime from **Settings → Account**.
 
 ---
 

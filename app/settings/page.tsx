@@ -13,8 +13,10 @@ import {
   Trash2,
   Plus,
   X,
+  LogOut,
 } from "lucide-react";
-import { useStore } from "@/lib/store";
+import { useSession, signOut } from "next-auth/react";
+import { useStore, GOOGLE_AUTH } from "@/lib/store";
 import { toTimeValue, parseTimeValue } from "@/lib/date";
 import {
   ACTIVITY_LABELS,
@@ -37,6 +39,7 @@ export default function SettingsPage() {
         icon={<SettingsIcon size={22} />}
       />
       <div className="space-y-5">
+        {GOOGLE_AUTH && <AccountCard />}
         <ProfileForm />
         <TargetsPreview />
         <ScheduleEditor />
@@ -44,6 +47,29 @@ export default function SettingsPage() {
         <DataManagement />
       </div>
     </HydrationGate>
+  );
+}
+
+function AccountCard() {
+  const { data: session } = useSession();
+  const email = session?.user?.email;
+  return (
+    <Card title="Account" icon={<User size={16} className="text-accent" />}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-fg">
+            {session?.user?.name || "Signed in"}
+          </p>
+          <p className="truncate text-xs text-muted">{email}</p>
+          <p className="mt-1 text-xs text-faint">
+            Your data syncs to this Google account across all your devices.
+          </p>
+        </div>
+        <button onClick={() => signOut()} className="btn-ghost shrink-0">
+          <LogOut size={15} /> Sign out
+        </button>
+      </div>
+    </Card>
   );
 }
 

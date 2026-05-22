@@ -60,6 +60,8 @@ interface CoachRequest {
   message: string;
   context: CoachContext;
   history?: ChatTurn[];
+  /** optional meal photo (base64, no data: prefix) */
+  image?: { data: string; mediaType: string };
 }
 
 export async function GET() {
@@ -85,12 +87,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const { message, context, history = [] } = body;
-  if (!message || !context) {
+  const { message, context, history = [], image } = body;
+  if (!context || (!message && !image)) {
     return NextResponse.json({ error: "Missing message or context." }, { status: 400 });
   }
 
-  const fallback = () => askCoach(message, context);
+  const fallback = () =>
+    image
+      ? "I can't see photos in offline mode — set up the AI coach (add your ANTHROPIC_API_KEY) and I'll analyze your meal pics. For now, tell me what's in it and I'll help."
+      : askCoach(message, context);
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return new Response(fallback(), { headers: TEXT_HEADERS });
@@ -104,13 +109,29 @@ export async function POST(req: Request) {
   }));
 
   // The current turn carries the live stats so the model always answers against
-  // fresh numbers, while the system persona stays cache-stable.
+  // fresh numbers, while the system persona stays cache-stable. A meal photo, if
+  // attached, is added as an image block so Claude can analyze it (vision).
+  const promptText = `${contextBlock(context)}\n\n[My message]\n${
+    message ||
+    "Here's a photo of what I'm eating/about to eat — judge it for my goal: estimate calories & macros, give a verdict (good/ok/avoid), and tell me if it fits my remaining calories."
+  }`;
+
+  const currentContent: Anthropic.ContentBlockParam[] = [];
+  if (image?.data) {
+    currentContent.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: image.mediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+        data: image.data,
+      },
+    });
+  }
+  currentContent.push({ type: "text", text: promptText });
+
   const messages: Anthropic.MessageParam[] = [
     ...priorTurns,
-    {
-      role: "user",
-      content: `${contextBlock(context)}\n\n[My message]\n${message}`,
-    },
+    { role: "user", content: currentContent },
   ];
 
   const encoder = new TextEncoder();

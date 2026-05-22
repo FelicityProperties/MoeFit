@@ -31,7 +31,8 @@ Built with **Next.js 14 (App Router) + TypeScript + Tailwind CSS + Recharts**. A
 
 ### 4. Personal AI Coach (`/coach`)
 - A strict-but-supportive chatbot. Ask things like *"Can I eat this burger?"*, *"Is Coke Zero okay?"*, *"Should I work out now or later?"*, *"I feel lazy, what should I do?"*, *"How many calories should I eat today?"*
-- Answers use your live context (calories left, water, today's workout, weight).
+- **Snap a meal photo** — attach a picture of what you're eating and the coach (Claude vision) estimates calories/macros and gives a verdict. Photos are downscaled on-device and not stored.
+- Answers use your live context (calories left, water, today's actual schedule incl. same-day tweaks, weight).
 
 ### 5. Daily Routine Control
 - Editable hour-by-hour routine (morning → night) drives the dashboard's live "what to do now".

@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Trash2, Sparkles, MessageSquareText, Loader2, Zap } from "lucide-react";
+import {
+  Send,
+  Trash2,
+  Sparkles,
+  MessageSquareText,
+  Loader2,
+  Zap,
+  ImagePlus,
+  X,
+} from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import { askCoach } from "@/lib/coach";
@@ -17,12 +26,53 @@ const SUGGESTIONS = [
   "How many calories should I eat today?",
 ];
 
+interface AttachedImage {
+  dataUrl: string; // for preview
+  data: string; // base64 without prefix
+  mediaType: string;
+}
+
+// Downscale a photo client-side (max edge ~1024px, JPEG) to keep the upload
+// small and fast while staying clear enough for the model to read.
+function fileToResized(file: File, maxDim = 1024): Promise<AttachedImage> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (Math.max(width, height) > maxDim) {
+        if (width >= height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const cx = canvas.getContext("2d");
+      if (!cx) return reject(new Error("no canvas"));
+      cx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      resolve({ dataUrl, data: dataUrl.split(",")[1] ?? "", mediaType: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image load error"));
+    };
+    img.src = url;
+  });
+}
+
 export default function CoachPage() {
   return (
     <HydrationGate>
       <PageHeader
         title="AI Coach"
-        subtitle="Strict but supportive. Ask anything about food, training, or discipline."
+        subtitle="Strict but supportive. Ask anything, or snap a photo of your meal."
         icon={<MessageSquareText size={22} />}
       />
       <Chat />
@@ -34,9 +84,11 @@ function Chat() {
   const { state, addChat, clearChat } = useStore();
   const ctx = useCoachContext();
   const [input, setInput] = useState("");
+  const [image, setImage] = useState<AttachedImage | null>(null);
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState<string | null>(null);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = state.chat;
 
@@ -52,14 +104,25 @@ function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.length, loading, streaming]);
 
+  const pickPhoto = async (file?: File) => {
+    if (!file) return;
+    try {
+      setImage(await fileToResized(file));
+    } catch {
+      /* ignore unreadable files */
+    }
+  };
+
   const send = async (text?: string) => {
     const content = (text ?? input).trim();
-    if (!content || loading) return;
+    if ((!content && !image) || loading) return;
 
-    // Snapshot history before adding the new message.
     const history = messages.slice(-12).map((m) => ({ role: m.role, content: m.content }));
-    addChat({ role: "user", content });
+    const sentImage = image;
+    const display = content || "📷 Photo of my meal";
+    addChat({ role: "user", content: display });
     setInput("");
+    setImage(null);
     setLoading(true);
     setStreaming("");
 
@@ -67,11 +130,17 @@ function Chat() {
       const res = await fetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, context: ctx, history }),
+        body: JSON.stringify({
+          message: content,
+          context: ctx,
+          history,
+          ...(sentImage
+            ? { image: { data: sentImage.data, mediaType: sentImage.mediaType } }
+            : {}),
+        }),
       });
       if (!res.body) throw new Error("no stream");
 
-      // Read the streamed reply chunk-by-chunk so it types out live.
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -82,11 +151,17 @@ function Chat() {
         setStreaming(acc);
       }
       acc += decoder.decode();
-      // Commit the finished reply once (avoids spamming storage during stream).
-      addChat({ role: "coach", content: acc.trim() || askCoach(content, ctx) });
+      const fallbackReply = sentImage
+        ? "I couldn't read that photo just now — try again, or tell me what's in the meal."
+        : askCoach(content, ctx);
+      addChat({ role: "coach", content: acc.trim() || fallbackReply });
     } catch {
-      // Network failure — fall back to the built-in coach so the chat still works.
-      addChat({ role: "coach", content: askCoach(content, ctx) });
+      addChat({
+        role: "coach",
+        content: sentImage
+          ? "I couldn't analyze that photo just now — try again, or describe the meal."
+          : askCoach(content, ctx),
+      });
     } finally {
       setStreaming(null);
       setLoading(false);
@@ -109,11 +184,9 @@ function Chat() {
             <Zap size={12} />
             {aiAvailable ? "Smart AI coach" : "Built-in coach"}
           </span>
-          {!aiAvailable && (
-            <span className="text-xs text-faint">
-              Add an ANTHROPIC_API_KEY to enable the full AI.
-            </span>
-          )}
+          <span className="text-xs text-faint">
+            {aiAvailable ? "Photo meal analysis on" : "Add an ANTHROPIC_API_KEY for full AI + photos"}
+          </span>
         </div>
       )}
 
@@ -125,8 +198,8 @@ function Chat() {
               <Sparkles size={26} />
             </div>
             <p className="max-w-sm text-sm text-muted">
-              I&apos;m your personal coach. I&apos;ll keep you honest, disciplined,
-              and on track. Ask me something, or tap a prompt below.
+              I&apos;m your personal coach. Ask me anything, or tap the photo
+              button to show me what you&apos;re eating and I&apos;ll judge it.
             </p>
           </div>
         )}
@@ -134,10 +207,7 @@ function Chat() {
         {messages.map((m) => (
           <div
             key={m.id}
-            className={clsx(
-              "flex",
-              m.role === "user" ? "justify-end" : "justify-start"
-            )}
+            className={clsx("flex", m.role === "user" ? "justify-end" : "justify-start")}
           >
             <div
               className={clsx(
@@ -187,6 +257,30 @@ function Chat() {
         ))}
       </div>
 
+      {/* Attached photo preview */}
+      {image && (
+        <div className="flex items-center gap-3 border-t border-line px-3 pt-3">
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image.dataUrl}
+              alt="Meal to analyze"
+              className="h-16 w-16 rounded-lg border border-line object-cover"
+            />
+            <button
+              onClick={() => setImage(null)}
+              className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-white"
+              aria-label="Remove photo"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <span className="text-xs text-muted">
+            Photo attached — add a note (optional), then send.
+          </span>
+        </div>
+      )}
+
       {/* Input */}
       <div className="flex items-center gap-2 border-t border-line p-3">
         {messages.length > 0 && (
@@ -199,8 +293,26 @@ function Chat() {
           </button>
         )}
         <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            pickPhoto(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={loading}
+          className="rounded-lg p-2 text-faint transition hover:bg-panel hover:text-accent"
+          aria-label="Add meal photo"
+        >
+          <ImagePlus size={18} />
+        </button>
+        <input
           className="input"
-          placeholder="Ask your coach…"
+          placeholder={image ? "Add a note (optional)…" : "Ask your coach… or attach a meal photo"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}

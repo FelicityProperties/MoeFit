@@ -21,11 +21,13 @@ Given the meal and their remaining calories for the day, respond with ONLY a JSO
   "alternatives": string[],              // 1-3 short, concrete healthier swaps (empty if it's already great)
   "reasoning": string                    // 1-3 sentences, direct and practical, referencing their remaining calories
 }
-Be realistic with estimates (restaurant portions are bigger than people think). Output JSON only.`;
+Be realistic with estimates (restaurant portions are bigger than people think). If a photo of the meal is attached, identify the food from the image and base your estimate on what you see. Output JSON only.`;
 
 interface OrderRequest {
   query: string;
   context: CoachContext;
+  /** optional meal photo (base64, no data: prefix) */
+  image?: { data: string; mediaType: string };
 }
 
 function extractJson(text: string): Record<string, unknown> | null {
@@ -52,13 +54,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const { query, context } = body;
-  if (!query || !context) {
+  const { query, context, image } = body;
+  if (!context || (!query && !image)) {
     return NextResponse.json({ error: "Missing query or context." }, { status: 400 });
   }
 
-  // Built-in analyzer when no key / on any failure.
-  const fallback = (): OrderSmartResult => analyzeMealText(query, context);
+  // Built-in analyzer when no key / on any failure. (Text-only — can't read a photo.)
+  const fallback = (): OrderSmartResult => analyzeMealText(query || "meal", context);
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ result: fallback(), source: "local" });
@@ -67,7 +69,7 @@ export async function POST(req: Request) {
   try {
     const client = new Anthropic();
     const prompt = [
-      `Meal: ${query}`,
+      query ? `Meal: ${query}` : "Meal: (see attached photo)",
       `Their daily calorie target: ${context.calorieTarget} kcal`,
       `Already eaten today: ${context.caloriesConsumed} kcal`,
       `Remaining today: ${context.caloriesRemaining} kcal`,
@@ -75,13 +77,26 @@ export async function POST(req: Request) {
       `Protein so far: ${context.proteinConsumed}g of ${context.proteinTarget}g`,
     ].join("\n");
 
+    const content: Anthropic.ContentBlockParam[] = [];
+    if (image?.data) {
+      content.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: image.mediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+          data: image.data,
+        },
+      });
+    }
+    content.push({ type: "text", text: prompt });
+
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: 700,
       system: [
         { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       ],
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content }],
     });
 
     const text = response.content
@@ -96,7 +111,7 @@ export async function POST(req: Request) {
     }
 
     const result: OrderSmartResult = {
-      query,
+      query: query || "Meal photo",
       verdict,
       calories: num(parsed.calories),
       protein: num(parsed.protein),

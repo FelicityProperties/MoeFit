@@ -14,6 +14,7 @@ import {
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import { askCoach } from "@/lib/coach";
+import { fileToResizedImage, type ResizedImage } from "@/lib/image";
 import { Card, PageHeader, clsx } from "@/components/ui";
 import { HydrationGate } from "@/components/Gates";
 
@@ -25,47 +26,6 @@ const SUGGESTIONS = [
   "I feel lazy, what should I do?",
   "How many calories should I eat today?",
 ];
-
-interface AttachedImage {
-  dataUrl: string; // for preview
-  data: string; // base64 without prefix
-  mediaType: string;
-}
-
-// Downscale a photo client-side (max edge ~1024px, JPEG) to keep the upload
-// small and fast while staying clear enough for the model to read.
-function fileToResized(file: File, maxDim = 1024): Promise<AttachedImage> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width, height } = img;
-      if (Math.max(width, height) > maxDim) {
-        if (width >= height) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const cx = canvas.getContext("2d");
-      if (!cx) return reject(new Error("no canvas"));
-      cx.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-      resolve({ dataUrl, data: dataUrl.split(",")[1] ?? "", mediaType: "image/jpeg" });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("image load error"));
-    };
-    img.src = url;
-  });
-}
 
 export default function CoachPage() {
   return (
@@ -84,7 +44,7 @@ function Chat() {
   const { state, addChat, clearChat } = useStore();
   const ctx = useCoachContext();
   const [input, setInput] = useState("");
-  const [image, setImage] = useState<AttachedImage | null>(null);
+  const [image, setImage] = useState<ResizedImage | null>(null);
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState<string | null>(null);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
@@ -107,7 +67,7 @@ function Chat() {
   const pickPhoto = async (file?: File) => {
     if (!file) return;
     try {
-      setImage(await fileToResized(file));
+      setImage(await fileToResizedImage(file));
     } catch {
       /* ignore unreadable files */
     }

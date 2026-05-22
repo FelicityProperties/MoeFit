@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   UtensilsCrossed,
   Plus,
@@ -11,7 +11,10 @@ import {
   Loader2,
   ChefHat,
   Check,
+  ImagePlus,
+  X,
 } from "lucide-react";
+import { fileToResizedImage, type ResizedImage } from "@/lib/image";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import {
@@ -233,27 +236,46 @@ function OrderSmart() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<OrderSmartResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState<ResizedImage | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const pickPhoto = async (file?: File) => {
+    if (!file) return;
+    try {
+      setImage(await fileToResizedImage(file));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const analyze = async () => {
     const q = query.trim();
-    if (!q || loading) return;
+    if ((!q && !image) || loading) return;
+    const sentImage = image;
     setLoading(true);
     setResult(null);
     try {
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, context: ctx }),
+        body: JSON.stringify({
+          query: q,
+          context: ctx,
+          ...(sentImage
+            ? { image: { data: sentImage.data, mediaType: sentImage.mediaType } }
+            : {}),
+        }),
       });
       const json = await res.json();
-      const out: OrderSmartResult = json.result ?? analyzeMealText(q, ctx);
+      const out: OrderSmartResult = json.result ?? analyzeMealText(q || "meal", ctx);
       setResult(out);
       addOrder(out);
     } catch {
-      const out = analyzeMealText(q, ctx);
+      const out = analyzeMealText(q || "meal", ctx);
       setResult(out);
       addOrder(out);
     } finally {
+      setImage(null);
       setLoading(false);
     }
   };
@@ -287,13 +309,31 @@ function OrderSmart() {
       className="border-accent/15"
     >
       <p className="mb-3 text-sm text-muted">
-        Order food a lot? Describe the restaurant meal and your coach tells you
-        if it fits your weight-loss goal.
+        Order food a lot? Describe the meal — or snap a photo of it — and your
+        coach tells you if it fits your weight-loss goal.
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            pickPhoto(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={loading}
+          className="btn-ghost shrink-0"
+          aria-label="Add meal photo"
+        >
+          <ImagePlus size={16} /> Photo
+        </button>
+        <input
           className="input"
-          placeholder='e.g. "McDonald’s Big Mac meal with coke"'
+          placeholder={image ? "Add a note (optional)…" : 'e.g. "Big Mac meal with coke"'}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && analyze()}
@@ -303,6 +343,29 @@ function OrderSmart() {
           {loading ? "Analyzing…" : "Analyze"}
         </button>
       </div>
+
+      {image && (
+        <div className="mt-3 flex items-center gap-3">
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image.dataUrl}
+              alt="Meal to analyze"
+              className="h-16 w-16 rounded-lg border border-line object-cover"
+            />
+            <button
+              onClick={() => setImage(null)}
+              className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-white"
+              aria-label="Remove photo"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <span className="text-xs text-muted">
+            Photo attached — tap Analyze and the coach reads the plate.
+          </span>
+        </div>
+      )}
 
       {loading && (
         <p className="mt-3 flex items-center gap-2 text-sm text-muted">

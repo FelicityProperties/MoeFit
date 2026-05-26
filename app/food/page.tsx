@@ -13,6 +13,10 @@ import {
   Check,
   ImagePlus,
   X,
+  ChevronLeft,
+  ChevronRight,
+  History,
+  CalendarDays,
 } from "lucide-react";
 import { fileToResizedImage, type ResizedImage } from "@/lib/image";
 import { useStore } from "@/lib/store";
@@ -28,6 +32,13 @@ import { analyzeMealText } from "@/lib/coach";
 import { buildMealPlan } from "@/lib/meals";
 import { OrderSmartResult, MealSuggestion } from "@/lib/types";
 import {
+  toDateKey,
+  fromDateKey,
+  addDays,
+  lastNDays,
+  prettyDayLabel,
+} from "@/lib/date";
+import {
   Card,
   PageHeader,
   Pill,
@@ -39,27 +50,91 @@ import {
 import { HydrationGate } from "@/components/Gates";
 
 export default function FoodPage() {
+  const today = toDateKey();
+  const [selectedDate, setSelectedDate] = useState<string>(today);
+  const isToday = selectedDate === today;
+
   return (
     <HydrationGate>
       <PageHeader
         title="Food Control"
-        subtitle="Track every calorie. Order smart. Stay in your budget."
+        subtitle="Track every calorie. View past days. Stay in your budget."
         icon={<UtensilsCrossed size={22} />}
       />
       <div className="space-y-5">
-        <Summary />
-        <MealPlan />
-        <OrderSmart />
-        <AddFood />
-        <Water />
+        <DayNav selected={selectedDate} onChange={setSelectedDate} />
+        <Summary date={selectedDate} />
+        {isToday && <MealPlan />}
+        {isToday && <OrderSmart />}
+        <AddFood date={selectedDate} />
+        <Water date={selectedDate} />
+        <FoodHistory selected={selectedDate} onSelect={setSelectedDate} />
       </div>
     </HydrationGate>
   );
 }
 
-function Summary() {
+function DayNav({
+  selected,
+  onChange,
+}: {
+  selected: string;
+  onChange: (key: string) => void;
+}) {
+  const today = toDateKey();
+  const isToday = selected === today;
+  const goPrev = () => onChange(toDateKey(addDays(fromDateKey(selected), -1)));
+  const goNext = () => {
+    if (isToday) return;
+    onChange(toDateKey(addDays(fromDateKey(selected), 1)));
+  };
+  return (
+    <Card className="!p-3">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={goPrev}
+          className="btn-ghost shrink-0 !px-2.5"
+          aria-label="Previous day"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div className="flex flex-1 flex-col items-center text-center">
+          <span className="text-sm font-bold text-fg">
+            {prettyDayLabel(selected)}
+          </span>
+          {!isToday && (
+            <button
+              onClick={() => onChange(today)}
+              className="text-[11px] font-semibold text-accent hover:underline"
+            >
+              Back to today
+            </button>
+          )}
+        </div>
+        <button
+          onClick={goNext}
+          disabled={isToday}
+          className="btn-ghost shrink-0 !px-2.5"
+          aria-label="Next day"
+        >
+          <ChevronRight size={16} />
+        </button>
+        <input
+          type="date"
+          value={selected}
+          max={today}
+          onChange={(e) => e.target.value && onChange(e.target.value)}
+          className="input max-w-[140px] !py-2"
+          aria-label="Pick a date"
+        />
+      </div>
+    </Card>
+  );
+}
+
+function Summary({ date }: { date: string }) {
   const { state, getDay } = useStore();
-  const day = getDay();
+  const day = getDay(date);
   const totals = dayTotals(day);
   const target = calorieTarget(state.profile);
   const macros = macroTargets(state.profile, target.target);
@@ -433,9 +508,9 @@ function OrderSmart() {
   );
 }
 
-function AddFood() {
+function AddFood({ date }: { date: string }) {
   const { addFood, getDay, removeFood } = useStore();
-  const day = getDay();
+  const day = getDay(date);
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
@@ -456,15 +531,18 @@ function AddFood() {
 
   const submit = () => {
     if (!name.trim() || !calories) return;
-    addFood({
-      name: name.trim(),
-      calories: Number(calories) || 0,
-      protein: Number(protein) || 0,
-      carbs: Number(carbs) || 0,
-      fat: Number(fat) || 0,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      source,
-    });
+    addFood(
+      {
+        name: name.trim(),
+        calories: Number(calories) || 0,
+        protein: Number(protein) || 0,
+        carbs: Number(carbs) || 0,
+        fat: Number(fat) || 0,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        source,
+      },
+      date
+    );
     setName("");
     setCalories("");
     setProtein("");
@@ -570,7 +648,7 @@ function AddFood() {
                 <span className="text-xs font-normal text-faint"> kcal</span>
               </span>
               <button
-                onClick={() => removeFood(f.id)}
+                onClick={() => removeFood(f.id, date)}
                 className="shrink-0 rounded-lg p-1.5 text-faint transition hover:bg-rose-50 hover:text-rose-600"
                 aria-label="Remove"
               >
@@ -584,9 +662,9 @@ function AddFood() {
   );
 }
 
-function Water() {
+function Water({ date }: { date: string }) {
   const { state, getDay, addWater, setWater } = useStore();
-  const day = getDay();
+  const day = getDay(date);
   const goal = waterTargetMl(state.profile);
   const glasses = Math.round(goal / 250);
   const filled = Math.round(day.waterMl / 250);
@@ -605,10 +683,10 @@ function Water() {
           <p className="text-xs text-faint">~{glasses} glasses target</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => addWater(250)} className="btn-ghost">
+          <button onClick={() => addWater(250, date)} className="btn-ghost">
             +250ml
           </button>
-          <button onClick={() => addWater(500)} className="btn-accent">
+          <button onClick={() => addWater(500, date)} className="btn-accent">
             +500ml
           </button>
         </div>
@@ -617,7 +695,7 @@ function Water() {
         {Array.from({ length: glasses }).map((_, i) => (
           <button
             key={i}
-            onClick={() => setWater((i + 1) * 250)}
+            onClick={() => setWater((i + 1) * 250, date)}
             className={clsx(
               "h-9 w-7 rounded-md border transition",
               i < filled
@@ -631,6 +709,114 @@ function Water() {
       <div className="mt-3">
         <ProgressBar value={day.waterMl} max={goal} color="#06b6d4" height={8} />
       </div>
+    </Card>
+  );
+}
+
+function FoodHistory({
+  selected,
+  onSelect,
+}: {
+  selected: string;
+  onSelect: (key: string) => void;
+}) {
+  const { state } = useStore();
+  const target = calorieTarget(state.profile);
+  const macros = macroTargets(state.profile, target.target);
+
+  // Today first, then yesterday, etc. — only show days you actually logged.
+  const days = lastNDays(14)
+    .slice()
+    .reverse()
+    .map((key) => {
+      const d = state.days[key];
+      const totals = dayTotals(d);
+      return {
+        key,
+        weightKg: d?.weightKg,
+        waterMl: d?.waterMl ?? 0,
+        count: d?.foods.length ?? 0,
+        totals,
+      };
+    });
+  const logged = days.filter((d) => d.count > 0 || d.waterMl > 0 || d.weightKg);
+  const totalKcal = logged.reduce((a, d) => a + d.totals.calories, 0);
+  const avgKcal = logged.length ? Math.round(totalKcal / logged.length) : 0;
+
+  return (
+    <Card
+      title="Food History"
+      icon={<History size={16} className="text-accent" />}
+      action={
+        logged.length > 0 ? (
+          <span className="pill bg-panel text-muted border border-line">
+            avg {avgKcal} kcal/day
+          </span>
+        ) : undefined
+      }
+    >
+      {logged.length === 0 ? (
+        <EmptyState
+          icon={<CalendarDays size={28} />}
+          title="No logged days yet"
+          hint="As you track meals each day they'll appear here. Tap a day to view or edit it."
+        />
+      ) : (
+        <div className="space-y-2">
+          {logged.map((d) => {
+            const isSelected = d.key === selected;
+            const left = target.target - d.totals.calories;
+            const over = left < 0;
+            const proteinPct = macros.protein > 0
+              ? Math.min(100, Math.round((d.totals.protein / macros.protein) * 100))
+              : 0;
+            return (
+              <button
+                key={d.key}
+                onClick={() => onSelect(d.key)}
+                className={clsx(
+                  "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition",
+                  isSelected
+                    ? "border-accent/40 bg-accent/10"
+                    : "border-line bg-panel hover:bg-slate-200"
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-fg">
+                      {prettyDayLabel(d.key)}
+                    </span>
+                    {d.weightKg && (
+                      <span className="pill bg-white text-muted border border-line">
+                        {d.weightKg}kg
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {d.count} item{d.count === 1 ? "" : "s"} ·{" "}
+                    P{d.totals.protein} ({proteinPct}%) · C{d.totals.carbs} · F{d.totals.fat}{" "}
+                    · {(d.waterMl / 1000).toFixed(1)}L water
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p
+                    className={clsx(
+                      "text-base font-extrabold",
+                      over ? "text-rose-600" : "text-fg"
+                    )}
+                  >
+                    {d.totals.calories}
+                    <span className="text-xs font-medium text-faint"> kcal</span>
+                  </p>
+                  <p className="text-[11px] text-faint">
+                    {over ? `+${Math.abs(left)} over` : `${left} left`}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </Card>
   );
 }

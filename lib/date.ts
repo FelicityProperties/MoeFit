@@ -47,6 +47,30 @@ export function prettyTime(d: Date = new Date()): string {
   });
 }
 
+/** "Today", "Yesterday", "Mon, May 19", or full date for older days. */
+export function prettyDayLabel(key: string): string {
+  const today = toDateKey();
+  if (key === today) return "Today";
+  const d = fromDateKey(key);
+  const yest = toDateKey(addDays(new Date(), -1));
+  if (key === yest) return "Yesterday";
+  const diffDays = Math.round(
+    (new Date().setHours(0, 0, 0, 0) - d.setHours(0, 0, 0, 0)) / 86400000
+  );
+  if (diffDays > 0 && diffDays <= 7) {
+    return d.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 /** 0 = Monday ... 6 = Sunday (useful for weekly workout plans). */
 export function mondayIndex(d: Date = new Date()): number {
   return (d.getDay() + 6) % 7;

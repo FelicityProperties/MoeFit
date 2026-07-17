@@ -21,7 +21,7 @@ import {
   ScheduleItem,
   WorkoutStatus,
 } from "./types";
-import { freshState, migrateState } from "./defaults";
+import { freshState, reviveState } from "./defaults";
 import { toDateKey } from "./date";
 
 const STORAGE_KEY = "moefit:v1";
@@ -53,19 +53,22 @@ function loadState(): AppState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return freshState();
-    const parsed = JSON.parse(raw) as AppState;
-    // Merge with fresh defaults so new fields always exist, then migrate.
-    return migrateState({ ...freshState(), ...parsed });
+    const parsed = JSON.parse(raw) as Partial<AppState>;
+    return reviveState(parsed);
   } catch {
     return freshState();
   }
 }
 
-function saveState(state: AppState) {
+/**
+ * Persist to localStorage. `ts` defaults to now; pass the server's updated_at
+ * when adopting a remote snapshot so last-write-wins comparisons stay honest.
+ */
+function saveState(state: AppState, ts?: number) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    window.localStorage.setItem(STORAGE_TS, String(Date.now()));
+    window.localStorage.setItem(STORAGE_TS, String(ts ?? Date.now()));
   } catch {
     // storage full / disabled — fail silently
   }
@@ -161,46 +164,87 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>(
     CLOUD_ENABLED ? "syncing" : "local"
   );
-  // Gates the cloud push effect until the initial server reconcile is done, so
-  // we never overwrite newer server data with stale local data on first load.
+  // Gates the cloud push effect until the initial server reconcile SUCCEEDS.
+  // Critical: if the first GET fails we must NOT start pushing — a fresh/empty
+  // browser would overwrite good cloud data. We retry instead.
   const syncReady = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The exact object we hydrated with — used to (a) detect edits made while
+  // the reconcile fetch is in flight and (b) skip the passive first persist.
+  const hydratedStateRef = useRef<AppState | null>(null);
 
   // Load once on mount (client only): localStorage first for instant UI, then
   // reconcile with the cloud if enabled (last-write-wins by timestamp).
   useEffect(() => {
     const local = loadState();
     const localTs = localTimestamp();
+    hydratedStateRef.current = local;
     setState(local);
     setHydrated(true);
 
     if (!CLOUD_ENABLED) return;
 
-    (async () => {
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const reconcile = async () => {
       try {
         const remote = await cloudGet();
+        if (cancelled) return;
         const remoteTs = remote.updatedAt
           ? new Date(remote.updatedAt).getTime()
           : 0;
         if (remote.data && remoteTs >= localTs) {
-          const merged = migrateState({ ...freshState(), ...remote.data });
-          setState(merged);
-          saveState(merged);
+          const merged = reviveState(remote.data as Partial<AppState>);
+          // Only adopt the remote snapshot if the user hasn't edited anything
+          // since mount — reference equality with `local` detects mutations.
+          // If they did edit, keep their state; it gets pushed below.
+          let applied = false;
+          hydratedStateRef.current = merged; // skip the passive re-persist
+          setState((current) => {
+            if (current !== local) return current;
+            applied = true;
+            return merged;
+          });
+          if (applied) {
+            // Mirror the SERVER timestamp locally so a passive open never
+            // makes old data look newer than another device's real edits.
+            saveState(merged, remoteTs);
+          } else {
+            // User edited while we were fetching — keep their edit and make
+            // sure it gets pushed now that syncReady flips on.
+            syncReady.current = true;
+            setState((current) => ({ ...current }));
+          }
         } else {
           await cloudPut(local); // server empty or stale -> push local up
         }
+        if (cancelled) return;
+        syncReady.current = true;
         setCloudStatus("synced");
       } catch {
+        if (cancelled) return;
+        // Leave pushes gated and retry — never let an unreconciled device
+        // start overwriting the server.
         setCloudStatus("offline");
-      } finally {
-        syncReady.current = true;
+        retryTimer = setTimeout(reconcile, 15000);
       }
-    })();
+    };
+    reconcile();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, []);
 
-  // Persist to localStorage on every change after hydration.
+  // Persist to localStorage on every change after hydration — but skip
+  // re-persisting the object we just loaded/adopted: bumping the timestamp on
+  // a passive open would make stale data look fresh and corrupt LWW syncing.
   useEffect(() => {
-    if (hydrated) saveState(state);
+    if (!hydrated) return;
+    if (state === hydratedStateRef.current) return;
+    saveState(state);
   }, [state, hydrated]);
 
   // Debounced write-through to the cloud after the initial reconcile.
@@ -412,7 +456,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       const parsed = JSON.parse(json) as AppState;
       if (!parsed || typeof parsed !== "object" || !parsed.profile) return false;
-      setState(migrateState({ ...freshState(), ...parsed }));
+      setState(reviveState(parsed));
       return true;
     } catch {
       return false;

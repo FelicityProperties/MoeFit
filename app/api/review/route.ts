@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { aiCallAllowed } from "@/lib/aiGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,10 @@ interface ReviewRequest {
 }
 
 export async function POST(req: Request) {
+  if (!(await aiCallAllowed())) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let body: ReviewRequest;
   try {
     body = await req.json();

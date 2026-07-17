@@ -5,6 +5,7 @@ import {
   cookieOptions,
   isAuthed,
   passcodeConfigured,
+  passcodeMatches,
   tokenFor,
 } from "@/lib/auth";
 
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
   const passcode = (body.passcode ?? "").trim();
-  if (!passcode || passcode !== process.env.APP_PASSCODE) {
+  if (!passcode || !passcodeMatches(passcode)) {
     return NextResponse.json({ error: "Incorrect passcode." }, { status: 401 });
   }
   cookies().set(AUTH_COOKIE, tokenFor(passcode), cookieOptions);

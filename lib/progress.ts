@@ -89,8 +89,12 @@ export function computeStreaks(state: AppState): Streaks {
       const k = keys[i];
       const m = dayMetrics(state, k);
       const has = state.days[k];
-      // Allow the streak to "not break" if today hasn't been logged yet.
-      if (k === today && !has) continue;
+      // Today is still in progress: count it once the goal is met, but never
+      // let an unfinished day break yesterday's streak.
+      if (k === today) {
+        if (has && pred(m)) count++;
+        continue;
+      }
       if (pred(m)) count++;
       else break;
     }
@@ -98,14 +102,17 @@ export function computeStreaks(state: AppState): Streaks {
   }
 
   // Workout streak: count consecutive completed training days; rest days are
-  // skipped (they neither add to nor break the streak).
+  // skipped (they neither add to nor break the streak). Today only counts
+  // once done — it never breaks the streak while there's still time to train.
   function workoutStreak(): number {
     let count = 0;
     for (let i = 0; i < keys.length; i++) {
       const k = keys[i];
       const m = dayMetrics(state, k);
-      const has = state.days[k];
-      if (k === today && !has) continue;
+      if (k === today) {
+        if (m.workoutPlanned && m.workoutDone) count++;
+        continue;
+      }
       if (!m.workoutPlanned) continue; // rest day — skip
       if (m.workoutDone) count++;
       else break;

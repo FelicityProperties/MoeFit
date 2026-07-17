@@ -104,3 +104,16 @@ export function migrateState(state: AppState): AppState {
   }
   return next;
 }
+
+/**
+ * Merge a parsed/loaded state with fresh defaults, then migrate. The version
+ * must come from the PARSED data (defaulting to 1 when absent) — spreading
+ * freshState first would stamp CURRENT_VERSION onto legacy data and silently
+ * skip its migrations.
+ */
+export function reviveState(parsed: Partial<AppState> | null | undefined): AppState {
+  const merged = { ...freshState(), ...(parsed ?? {}) } as AppState;
+  merged.version =
+    parsed && typeof parsed.version === "number" ? parsed.version : 1;
+  return migrateState(merged);
+}

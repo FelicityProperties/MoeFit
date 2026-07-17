@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { askCoach, type CoachContext } from "@/lib/coach";
+import { aiCallAllowed } from "@/lib/aiGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,6 +81,10 @@ const TEXT_HEADERS = {
 // word-by-word. Falls back to the built-in coach (as a single chunk) when no key
 // is configured or the API call fails.
 export async function POST(req: Request) {
+  if (!(await aiCallAllowed())) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let body: CoachRequest;
   try {
     body = await req.json();

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { aiCallAllowed } from "@/lib/aiGuard";
 import { analyzeMealText, type CoachContext } from "@/lib/coach";
 import type { OrderSmartResult } from "@/lib/types";
 
@@ -47,6 +48,10 @@ function num(v: unknown, fallback = 0): number {
 }
 
 export async function POST(req: Request) {
+  if (!(await aiCallAllowed())) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let body: OrderRequest;
   try {
     body = await req.json();

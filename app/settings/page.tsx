@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Settings as SettingsIcon,
   User,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useStore, GOOGLE_AUTH } from "@/lib/store";
-import { toTimeValue, parseTimeValue } from "@/lib/date";
+import { toTimeValue, parseTimeValue, minutesOfDay } from "@/lib/date";
 import {
   ACTIVITY_LABELS,
   bmi,
@@ -267,7 +267,9 @@ function ScheduleEditor() {
       : mode === "saturday"
       ? setSaturdaySchedule
       : setSundaySchedule;
-  const items = [...current].sort((a, b) => a.hour - b.hour);
+  const items = [...current].sort(
+    (a, b) => minutesOfDay(a.hour, a.minute) - minutesOfDay(b.hour, b.minute)
+  );
 
   const update = (id: string, patch: Partial<ScheduleItem>) => {
     setCurrent(current.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -354,6 +356,12 @@ function ScheduleEditor() {
 function MissionsEditor() {
   const { state, setDefaultMissions, setMissions } = useStore();
   const [missions, setLocal] = useState<string[]>(state.defaultMissions);
+
+  // Re-sync when the store's list changes underneath us (e.g. the cloud
+  // reconcile lands after mount) so "Save" can't clobber it with a stale copy.
+  useEffect(() => {
+    setLocal(state.defaultMissions);
+  }, [state.defaultMissions]);
 
   const update = (i: number, val: string) =>
     setLocal(missions.map((m, idx) => (idx === i ? val : m)));

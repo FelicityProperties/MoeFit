@@ -314,14 +314,28 @@ export function matchFood(query: string): FoodFact | null {
   return best?.fact ?? null;
 }
 
-/** Find ALL matching foods (for multi-item orders like "burger and fries"). */
+/**
+ * Find ALL matching foods (for multi-item orders like "burger and fries").
+ * Longer keywords win and consume their text so overlapping entries don't
+ * double-count — e.g. "coke zero" must match the zero-calorie entry only,
+ * not also the regular-soda entry via its "coke" keyword.
+ */
 export function matchAllFoods(query: string): FoodFact[] {
-  const q = query.toLowerCase();
-  const found: FoodFact[] = [];
+  let q = query.toLowerCase();
+  const pairs: { fact: FoodFact; kw: string }[] = [];
   for (const fact of FOOD_DB) {
-    if (fact.keywords.some((kw) => q.includes(kw)) && !found.includes(fact)) {
-      found.push(fact);
+    for (const kw of fact.keywords) {
+      if (q.includes(kw)) pairs.push({ fact, kw });
     }
+  }
+  pairs.sort((a, b) => b.kw.length - a.kw.length);
+
+  const found: FoodFact[] = [];
+  for (const { fact, kw } of pairs) {
+    if (found.includes(fact)) continue;
+    if (!q.includes(kw)) continue; // its text was consumed by a longer match
+    found.push(fact);
+    q = q.split(kw).join(" ");
   }
   return found;
 }

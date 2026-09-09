@@ -39,10 +39,12 @@ export function passcodeMatches(input: string): boolean {
   return timingSafeEqual(sha256(input), sha256(pass));
 }
 
-export function isAuthed(): boolean {
+export async function isAuthed(): Promise<boolean> {
   const token = expectedToken();
   if (!token) return false; // no passcode configured -> nothing is authorized
-  const cookie = cookies().get(AUTH_COOKIE)?.value ?? "";
+  // Next 15: cookies() is async.
+  const jar = await cookies();
+  const cookie = jar.get(AUTH_COOKIE)?.value ?? "";
   if (cookie.length !== token.length) return false;
   return timingSafeEqual(Buffer.from(cookie), Buffer.from(token));
 }

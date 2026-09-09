@@ -16,7 +16,7 @@ async function resolveUserId(): Promise<string | null> {
     const session = await auth();
     return session?.user?.email ?? null;
   }
-  return isAuthed() ? "default" : null;
+  return (await isAuthed()) ? "default" : null;
 }
 
 export async function GET() {

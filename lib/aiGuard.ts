@@ -20,7 +20,7 @@ export async function aiCallAllowed(): Promise<boolean> {
     const session = await auth();
     return Boolean(session?.user?.email);
   }
-  if (passcodeConfigured()) return isAuthed();
+  if (passcodeConfigured()) return await isAuthed();
   // Cloud flag on but nothing configured — fail open so the app isn't bricked
   // during setup (the state endpoint still refuses without auth).
   return true;

@@ -2,7 +2,7 @@
 
 Your personal **life operating system** for weight loss, food control, discipline, workouts, and daily structure. A live daily dashboard that acts like your personal AI fitness, food, and routine coach.
 
-Built with **Next.js 14 (App Router) + TypeScript + Tailwind CSS + Recharts**. All your data is saved **locally in your browser** — no account, no server needed. Structured so you can connect a real AI API or a cloud database (Supabase / Firebase) later.
+Built with **Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS + Recharts**. All your data is saved **locally in your browser** by default — no account, no server needed — and can optionally sync to Neon Postgres behind Google sign-in or a passcode.
 
 ---
 

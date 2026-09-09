@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 // Status check used by the client AuthGate on load.
 export async function GET() {
   return NextResponse.json({
-    authenticated: isAuthed(),
+    authenticated: await isAuthed(),
     configured: passcodeConfigured(),
   });
 }
@@ -38,12 +38,14 @@ export async function POST(req: Request) {
   if (!passcode || !passcodeMatches(passcode)) {
     return NextResponse.json({ error: "Incorrect passcode." }, { status: 401 });
   }
-  cookies().set(AUTH_COOKIE, tokenFor(passcode), cookieOptions);
+  const jar = await cookies();
+  jar.set(AUTH_COOKIE, tokenFor(passcode), cookieOptions);
   return NextResponse.json({ ok: true });
 }
 
 // Logout.
 export async function DELETE() {
-  cookies().set(AUTH_COOKIE, "", { ...cookieOptions, maxAge: 0 });
+  const jar = await cookies();
+  jar.set(AUTH_COOKIE, "", { ...cookieOptions, maxAge: 0 });
   return NextResponse.json({ ok: true });
 }

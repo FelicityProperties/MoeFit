@@ -2,7 +2,7 @@ import { FoodFact, matchAllFoods, matchFood } from "./foods";
 import { DayReview, OrderSmartResult } from "./types";
 
 // ============================================================================
-// MoeFit Coach Engine
+// FeliHealth Coach Engine
 // ----------------------------------------------------------------------------
 // This is a rule-based, offline "AI coach". It needs NO API key and works fully
 // in the browser. It is structured so you can later swap in a real LLM:

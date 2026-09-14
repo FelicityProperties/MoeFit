@@ -41,6 +41,7 @@ import { planForDate } from "@/lib/workout";
 import { Card, ProgressBar, Ring, Stat, clsx } from "@/components/ui";
 import { ScheduleItem } from "@/lib/types";
 import { HydrationGate, SetupPrompt } from "@/components/Gates";
+import { UpgradeCard } from "@/components/UpgradeCard";
 
 const CATEGORY_ICON: Record<ScheduleItem["category"], typeof Sun> = {
   wake: Sun,
@@ -459,6 +460,9 @@ function Dashboard() {
           </div>
         )}
       </Card>
+
+      {/* Pro upsell (renders nothing when billing is off or user is Pro) */}
+      <UpgradeCard />
 
       {/* Workout shortcut */}
       <Card title="Today's Training" icon={<Dumbbell size={16} className="text-accent" />}>

@@ -6,10 +6,17 @@ import { Providers } from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "MoeFit Command Center",
+  title: "FeliHealth — AI health coach for weight loss & discipline",
   description:
-    "Your personal life operating system for weight loss, food control, discipline, workouts, and daily structure.",
-  applicationName: "MoeFit Command Center",
+    "Track calories, meals, workouts and your daily routine — with an AI coach that knows your day, reads your meal photos, and keeps you honest.",
+  applicationName: "FeliHealth",
+  openGraph: {
+    title: "FeliHealth",
+    description:
+      "Lose the weight. Keep the discipline. An AI health coach for calories, meals, workouts and routine.",
+    type: "website",
+    siteName: "FeliHealth",
+  },
 };
 
 export const viewport: Viewport = {

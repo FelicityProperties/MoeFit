@@ -30,19 +30,19 @@ export function SetupPrompt() {
       </div>
       <div className="space-y-1.5">
         <h1 className="text-2xl font-extrabold tracking-tight text-fg">
-          Welcome to MoeFit Command Center
+          Welcome to FeliHealth
         </h1>
         <p className="max-w-md text-sm text-muted">
-          Your personal operating system for weight loss, food control,
-          discipline, and daily structure. Let&apos;s set up your profile so I
-          can build your plan and coach you properly.
+          Your AI coach for weight loss, food control, discipline, and daily
+          structure. Set up your profile (30 seconds) so I can build your plan
+          and coach you properly.
         </p>
       </div>
       <Link href="/settings" className="btn-accent">
         Set up my profile <ArrowRight size={16} />
       </Link>
       <p className="text-xs text-faint">
-        Everything is saved locally on this device. No account needed.
+        Your data is yours — export or delete it anytime from Settings.
       </p>
     </div>
   );

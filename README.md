@@ -1,4 +1,4 @@
-# MoeFit Command Center
+# FeliHealth
 
 Your personal **life operating system** for weight loss, food control, discipline, workouts, and daily structure. A live daily dashboard that acts like your personal AI fitness, food, and routine coach.
 
@@ -136,9 +136,46 @@ same data as your laptop. Setup:
 
 ---
 
+## Monetization — FeliHealth Pro (Stripe)
+
+**Model:** Free = the full manual tracker + built-in coach. **Pro** = every feature
+that runs on Claude (AI coach, meal-photo analysis, AI meal plans, AI daily review).
+So each paid feature is exactly one that costs money to serve.
+
+Billing needs **Google sign-in mode** (it's per-account). While Stripe isn't
+configured, every signed-in user simply has full access — nothing changes until
+you flip it on.
+
+### Set it up (≈10 minutes)
+
+1. **Stripe → Product catalog → Add product**: name it *FeliHealth Pro*, add a
+   **recurring** price (e.g. monthly). Copy the price ID (`price_...`).
+2. **Stripe → Developers → API keys**: copy the **secret key** (`sk_test_...` to
+   try it, `sk_live_...` to go live).
+3. **Stripe → Developers → Webhooks → Add endpoint**:
+   `https://YOUR-DOMAIN/api/billing/webhook`, events
+   `checkout.session.completed`, `customer.subscription.created`,
+   `customer.subscription.updated`, `customer.subscription.deleted`.
+   Copy the **signing secret** (`whsec_...`).
+4. **Stripe → Settings → Billing → Customer portal**: enable it (lets users cancel
+   / update cards from Settings → Billing).
+5. In **Vercel → Environment Variables** add:
+   `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`,
+   `ADMIN_EMAILS` (your email — Pro for free), and optionally
+   `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPPORT_EMAIL`. Redeploy.
+
+How it works: `/api/billing/checkout` opens Stripe Checkout; the webhook writes
+the subscription into the `subscriptions` table (auto-created) keyed by email;
+`/api/billing/status` tells the UI the plan; the AI routes return **402** for
+non-Pro users and the app falls back to the built-in engines with an upgrade
+prompt. Signed-out visitors see a public landing page with live pricing.
+Legal pages live at `/terms` and `/privacy` — review them before launch.
+
+---
+
 ## Your data
 
-- **Local mode:** stored in `localStorage` under `moefit:v1`.
+- **Local mode:** stored in `localStorage` under `felihealth:v1` (auto-migrated from the old `moefit:v1` key).
 - **Cloud mode:** stored in Neon (`user_state` table, JSONB), cached locally.
 - **Settings → Your Data** lets you **export** a JSON backup, **import** it, or
   **reset** everything. Conflicts resolve last-write-wins by timestamp.

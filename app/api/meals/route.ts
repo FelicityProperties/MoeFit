@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { aiCallAllowed } from "@/lib/aiGuard";
+import { aiGuardResponse } from "@/lib/aiGuard";
 import type { CoachContext } from "@/lib/coach";
 import { buildMealPlan } from "@/lib/meals";
 import type { MealSuggestion } from "@/lib/types";
@@ -48,9 +48,8 @@ function num(v: unknown): number {
 }
 
 export async function POST(req: Request) {
-  if (!(await aiCallAllowed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const blocked = await aiGuardResponse();
+  if (blocked) return blocked;
 
   let body: MealsRequest;
   try {

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { aiCallAllowed } from "@/lib/aiGuard";
+import { aiGuardResponse } from "@/lib/aiGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = process.env.AI_MODEL || "claude-opus-4-7";
 
-const SYSTEM_PROMPT = `You are MoeFit Coach — a strict but supportive fitness and nutrition coach. Write the user's end-of-day review for a weight-loss app.
+const SYSTEM_PROMPT = `You are FeliHealth Coach — a strict but supportive fitness and nutrition coach. Write the user's end-of-day review for a weight-loss app.
 
 Keep it to 3-5 sentences, direct and personal, tied to the specifics of their day. Acknowledge wins, call out slips without being harsh, and end with ONE clear focus for tomorrow. Plain text only — no markdown, no headers, no lists. The numeric score is already decided; do not invent a different score, just reflect it in your tone.`;
 
@@ -31,9 +31,8 @@ interface ReviewRequest {
 }
 
 export async function POST(req: Request) {
-  if (!(await aiCallAllowed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const blocked = await aiGuardResponse();
+  if (blocked) return blocked;
 
   let body: ReviewRequest;
   try {

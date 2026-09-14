@@ -24,8 +24,11 @@ import {
 import { freshState, reviveState } from "./defaults";
 import { toDateKey } from "./date";
 
-const STORAGE_KEY = "moefit:v1";
-const STORAGE_TS = "moefit:v1:ts";
+const STORAGE_KEY = "felihealth:v1";
+const STORAGE_TS = "felihealth:v1:ts";
+// Pre-rebrand keys; migrated on first load so nobody loses their data.
+const LEGACY_KEY = "moefit:v1";
+const LEGACY_TS = "moefit:v1:ts";
 
 // When true (set NEXT_PUBLIC_CLOUD_ENABLED=true on Vercel), the app gates behind
 // a passcode and syncs AppState to Neon Postgres via /api/state, using
@@ -51,7 +54,17 @@ export type CloudStatus = "local" | "syncing" | "synced" | "offline";
 function loadState(): AppState {
   if (typeof window === "undefined") return freshState();
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    let raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // One-time migration from the pre-rebrand storage key.
+      const legacy = window.localStorage.getItem(LEGACY_KEY);
+      if (legacy) {
+        window.localStorage.setItem(STORAGE_KEY, legacy);
+        const ts = window.localStorage.getItem(LEGACY_TS);
+        if (ts) window.localStorage.setItem(STORAGE_TS, ts);
+        raw = legacy;
+      }
+    }
     if (!raw) return freshState();
     const parsed = JSON.parse(raw) as Partial<AppState>;
     return reviveState(parsed);
@@ -76,7 +89,11 @@ function saveState(state: AppState, ts?: number) {
 
 function localTimestamp(): number {
   if (typeof window === "undefined") return 0;
-  return Number(window.localStorage.getItem(STORAGE_TS) || 0);
+  return Number(
+    window.localStorage.getItem(STORAGE_TS) ||
+      window.localStorage.getItem(LEGACY_TS) ||
+      0
+  );
 }
 
 // --- Cloud (Neon via /api/state) ---

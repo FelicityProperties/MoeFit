@@ -145,11 +145,11 @@ function Brand({ compact }: { compact?: boolean }) {
       </div>
       <div className="leading-tight">
         <div className="text-sm font-extrabold tracking-tight text-fg">
-          MoeFit
+          FeliHealth
         </div>
         {!compact && (
           <div className="text-[10px] font-semibold uppercase tracking-widest text-accent">
-            Command Center
+            AI Health Coach
           </div>
         )}
       </div>

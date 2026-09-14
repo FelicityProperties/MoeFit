@@ -1,8 +1,8 @@
 {
-  "name": "moefit-command-center",
-  "version": "1.0.0",
+  "name": "felihealth",
+  "version": "2.0.0",
   "private": true,
-  "description": "MoeFit Command Center - personal AI fitness, food, and routine operating system",
+  "description": "FeliHealth - AI health coach for weight loss, food control, workouts and daily discipline",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,7 +18,8 @@
     "next-auth": "^5.0.0-beta.32",
     "react": "^19.0.8",
     "react-dom": "^19.0.8",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "stripe": "^22.6.2"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

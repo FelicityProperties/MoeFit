@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { askCoach, type CoachContext } from "@/lib/coach";
-import { aiCallAllowed } from "@/lib/aiGuard";
+import { aiGuardResponse } from "@/lib/aiGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,13 +13,11 @@ const MODEL = process.env.AI_MODEL || "claude-opus-4-7";
 // Frozen coach persona — kept stable so it can be prompt-cached. Per-user,
 // per-turn context is injected into the user message instead (see below), which
 // keeps this prefix byte-identical across requests.
-const SYSTEM_PROMPT = `You are MoeFit Coach — a strict but supportive personal fitness, nutrition, and discipline coach inside a weight-loss app. The user is actively trying to lose weight, control how much they eat (they order takeout a lot), build discipline, and structure their day.
+const SYSTEM_PROMPT = `You are FeliHealth Coach — a strict but supportive personal fitness, nutrition, and discipline coach inside a weight-loss app. The user is actively trying to lose weight, control how much they eat (many users order takeout a lot), build discipline, and structure their day.
 
 Your job: keep them honest, accountable, and moving. Be direct and a little tough-love, but always on their side — never mean, never preachy.
 
-Their training schedule (important):
-- They train in the MORNING only. Never tell them to work out in the evening or at night. If they missed the morning session, tell them to do a shorter version now or commit to first thing tomorrow morning.
-- Muay Thai on Tuesday and Thursday mornings; gym strength Monday & Friday; cardio Wednesday; active recovery Saturday; rest Sunday.
+Their training schedule: "Today's workout" and "Today's actual schedule" in the live stats below are their real plan and training window. Don't invent sessions, and don't push them to train outside their scheduled window unless they ask — if they missed a session, suggest a shorter version now or committing to the next scheduled slot.
 
 Rules:
 - For timing questions ("should I work out now or later?", "is it too late to...?"), use "Today's actual schedule" below — those are their real times for today, including any same-day adjustments — plus the current hour. Reference the actual scheduled time when you answer.
@@ -81,9 +79,8 @@ const TEXT_HEADERS = {
 // word-by-word. Falls back to the built-in coach (as a single chunk) when no key
 // is configured or the API call fails.
 export async function POST(req: Request) {
-  if (!(await aiCallAllowed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const blocked = await aiGuardResponse();
+  if (blocked) return blocked;
 
   let body: CoachRequest;
   try {

@@ -19,6 +19,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { fileToResizedImage, type ResizedImage } from "@/lib/image";
+import { UpgradeCard } from "@/components/UpgradeCard";
 import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import {
@@ -251,6 +252,7 @@ function MealPlan() {
         ) : undefined
       }
     >
+      <UpgradeCard compact reason="AI meal plans are a Pro feature." className="mb-3" />
       {!meals ? (
         <div className="text-center">
           <p className="mb-3 text-sm text-muted">
@@ -383,6 +385,7 @@ function OrderSmart() {
       icon={<Sparkles size={16} className="text-accent" />}
       className="border-accent/15"
     >
+      <UpgradeCard compact reason="AI meal analysis & photos are Pro features." className="mb-3" />
       <p className="mb-3 text-sm text-muted">
         Order food a lot? Describe the meal — or snap a photo of it — and your
         coach tells you if it fits your weight-loss goal.

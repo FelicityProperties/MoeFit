@@ -1,4 +1,4 @@
-// Core data model for MoeFit Command Center.
+// Core data model for FeliHealth.
 // Everything is persisted to localStorage (see lib/store.tsx). The shapes here
 // are intentionally plain JSON so they can later be synced to Supabase/Firebase
 // without transformation.

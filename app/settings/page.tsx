@@ -14,9 +14,12 @@ import {
   Plus,
   X,
   LogOut,
+  CreditCard,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useStore, GOOGLE_AUTH } from "@/lib/store";
+import { useBilling } from "@/lib/useBilling";
+import { UpgradeCard } from "@/components/UpgradeCard";
 import { toTimeValue, parseTimeValue, minutesOfDay } from "@/lib/date";
 import {
   ACTIVITY_LABELS,
@@ -40,6 +43,7 @@ export default function SettingsPage() {
       />
       <div className="space-y-5">
         {GOOGLE_AUTH && <AccountCard />}
+        {GOOGLE_AUTH && <BillingCard />}
         <ProfileForm />
         <TargetsPreview />
         <ScheduleEditor />
@@ -70,6 +74,77 @@ function AccountCard() {
         </button>
       </div>
     </Card>
+  );
+}
+
+function BillingCard() {
+  const billing = useBilling();
+  const [flash, setFlash] = useState<"success" | "cancel" | null>(null);
+
+  // Stripe sends the user back to /settings?billing=success|cancel.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("billing");
+    if (p === "success" || p === "cancel") {
+      setFlash(p);
+      window.history.replaceState({}, "", "/settings");
+      if (p === "success") {
+        // Webhook may lag the redirect by a moment — re-check shortly.
+        setTimeout(() => billing.refresh(), 2500);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (billing.loading || !billing.enabled) return null;
+
+  const renews = billing.currentPeriodEnd
+    ? new Date(billing.currentPeriodEnd).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+
+  return (
+    <>
+      {flash === "success" && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+          🎉 Welcome to FeliHealth Pro — your AI coach is unlocked. If it still
+          shows Free, give it a few seconds and refresh.
+        </div>
+      )}
+      {flash === "cancel" && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Checkout cancelled — nothing was charged.
+        </div>
+      )}
+      {billing.plan === "pro" ? (
+        <Card title="Billing" icon={<CreditCard size={16} className="text-accent" />}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-fg">
+                FeliHealth Pro{billing.isAdmin ? " · owner" : ""}
+              </p>
+              <p className="text-xs text-muted">
+                {billing.isAdmin
+                  ? "Owner access — Pro is always on for this account."
+                  : renews
+                  ? `Active · renews ${renews}`
+                  : "Active"}
+                {billing.price && !billing.isAdmin ? ` · ${billing.price.label}` : ""}
+              </p>
+            </div>
+            {billing.hasCustomer && (
+              <button onClick={billing.manage} disabled={billing.busy} className="btn-ghost shrink-0">
+                Manage subscription
+              </button>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <UpgradeCard />
+      )}
+    </>
   );
 }
 
@@ -423,7 +498,7 @@ function DataManagement() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `moefit-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `felihealth-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -441,7 +516,7 @@ function DataManagement() {
   const doReset = () => {
     if (
       window.confirm(
-        "This will erase ALL your MoeFit data on this device. This cannot be undone. Continue?"
+        "This will erase ALL your FeliHealth data on this device. This cannot be undone. Continue?"
       )
     ) {
       resetAll();

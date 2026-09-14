@@ -9,6 +9,7 @@ import { calorieTarget, dayTotals, waterTargetMl } from "@/lib/calculations";
 import { planForDate } from "@/lib/workout";
 import { Card, PageHeader, Ring, clsx } from "@/components/ui";
 import { HydrationGate } from "@/components/Gates";
+import { UpgradeCard } from "@/components/UpgradeCard";
 
 export default function ReviewPage() {
   return (
@@ -115,6 +116,7 @@ function Review() {
   return (
     <div className="space-y-5">
       <Card title="Tonight's Check-in" icon={<Sparkles size={16} className="text-accent" />}>
+        <UpgradeCard compact reason="AI-written daily reviews are a Pro feature." className="mb-4" />
         <div className="space-y-5">
           {/* Workout */}
           <Field label="Did you complete your workout today?">

@@ -15,6 +15,8 @@ import { useStore } from "@/lib/store";
 import { useCoachContext } from "@/lib/hooks";
 import { askCoach } from "@/lib/coach";
 import { fileToResizedImage, type ResizedImage } from "@/lib/image";
+import { useBilling } from "@/lib/useBilling";
+import { UpgradeCard } from "@/components/UpgradeCard";
 import { Card, PageHeader, clsx } from "@/components/ui";
 import { HydrationGate } from "@/components/Gates";
 
@@ -48,6 +50,7 @@ function Chat() {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState<string | null>(null);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
+  const billing = useBilling();
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = state.chat;
@@ -99,7 +102,8 @@ function Chat() {
             : {}),
         }),
       });
-      if (!res.body) throw new Error("no stream");
+      // 401/402 (or any error) -> use the built-in coach instead.
+      if (!res.ok || !res.body) throw new Error("no stream");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -132,21 +136,32 @@ function Chat() {
     <Card className="flex h-[calc(100vh-220px)] min-h-[440px] flex-col p-0">
       {/* Status badge */}
       {aiAvailable !== null && (
-        <div className="flex items-center gap-2 border-b border-line px-4 py-2">
-          <span
-            className={clsx(
-              "pill",
-              aiAvailable
-                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                : "bg-panel text-muted border border-line"
-            )}
-          >
-            <Zap size={12} />
-            {aiAvailable ? "Smart AI coach" : "Built-in coach"}
-          </span>
-          <span className="text-xs text-faint">
-            {aiAvailable ? "Photo meal analysis on" : "Add an ANTHROPIC_API_KEY for full AI + photos"}
-          </span>
+        <div className="border-b border-line">
+          <div className="flex items-center gap-2 px-4 py-2">
+            <span
+              className={clsx(
+                "pill",
+                aiAvailable && billing.isPro
+                  ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                  : "bg-panel text-muted border border-line"
+              )}
+            >
+              <Zap size={12} />
+              {aiAvailable && billing.isPro ? "Smart AI coach" : "Built-in coach"}
+            </span>
+            <span className="text-xs text-faint">
+              {aiAvailable && billing.isPro
+                ? "Photo meal analysis on"
+                : billing.needsUpgrade
+                ? "Upgrade to Pro for the AI coach + photo analysis"
+                : "Add an ANTHROPIC_API_KEY for full AI + photos"}
+            </span>
+          </div>
+          <UpgradeCard
+            compact
+            reason="The smart AI coach is a Pro feature."
+            className="mx-4 mb-3"
+          />
         </div>
       )}
 
